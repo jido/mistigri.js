@@ -1,4 +1,4 @@
-﻿// Mistigri /// Σ:{
+// Mistigri /// Σ:{
 // Mustache-inspired JavaScript template engine
 
 var template = "Test template; {{&person.name default ='Madam'}} loves Σ:{ " +
@@ -9,49 +9,46 @@ var model = {
 };
 alert(render(template.split("{{"), model));
 
-function render(parts, model, close_brace) {
-    close_brace = (close_brace) ? close_brace : "}}";
-    if (!('placeholderText' in model))
-    {
-        model.placeholderText = "N/A";
-    }
+function render(parts, model, config) {
+    var close_brace = (config && 'closeBrace' in config) ? config.closeBrace : "}}";
+    var default_text = (config && 'placeholderText' in config) ? config.placeholderText : "N/A";
     var rendered = parts[0];
     var position = rendered.length + close_brace.length;
     for (var partnum = 1; partnum < parts.length; ++partnum) 
     {
         var part = parts[partnum];
-        var tagtext = splitAt(close_brace, part);
-        var tag = tagtext[0];
-        var args = {$position: position, $template: parts, $model: model};
+        var mitext = splitAt(close_brace, part);
+        var mistigri = mitext[0];
+        var args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
         var action;
         switch (part.substr(0, 1)) 
         {
             case "#":
-                console.log("Conditional: " + tag);
+                console.log("Conditional: " + mistigri);
                 break;
             case "^":
-                console.log("Anti-conditional: " + tag);
+                console.log("Anti-conditional: " + mistigri);
                 break;
             case "/":
-                console.log("Block end: " + tag);
+                console.log("Block end: " + mistigri);
                 break;
             case ">":
-                console.log("Include: " + tag);
+                console.log("Include: " + mistigri);
                 break;
-            case "! ":
+            case "!":
                 break; // just a comment
             case "&":
-                action = parseAction(tag, args);
-                rendered += handleValue(action.substr(1), args);
+                action = parseAction(mistigri.substr(1), args);
+                rendered += handleValue(action, args);
                 break;
             default:
-                action = parseAction(tag, args);
+                action = parseAction(mistigri, args);
                 rendered += escapeHtml(handleValue(action, args));
         }
-        rendered += tagtext[1];
+        rendered += mitext[1];
         position += part.length + close_brace.length;
-  }
-  return rendered;
+    }
+    return rendered;
 }
 
 function splitAt(pattern, text) {
@@ -178,7 +175,7 @@ function handleValue(action, args) {
     }
     if (result === undefined || result === null)
     {
-        return ('default' in args) ? args.default : args.$model.placeholderText;
+        return ('default' in args) ? args.default : args.$placeholderText;
     }
     return result;
 }
