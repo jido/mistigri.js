@@ -78,36 +78,64 @@ function getArgs(parts, args)
 {
     var name = "";
     var seen_sign = false;
+    var single_quoted = false;
+    var double_quoted = false;
     for (var partnum in parts) 
     {
-        var argval = splitAt("=", parts[partnum]);
-        if (seen_sign && argval.length === 2) 
+        var value = parts[partnum];
+        if (single_quoted || double_quoted)
         {
-            break;    // Huh, another '=' sign?
+            single_quoted = (single_quoted && value.indexOf("'", value.length - 1) === -1);
+            double_quoted = (double_quoted && value.indexOf('"', value.length - 1) === -1);
+            if (!single_quoted && !double_quoted)
+            {
+                value = value.substr(0, value.length - 1);     // closed quote
+            }
+            args[name] += " " + value;
         }
-        name = (name.length === 0) ? argval[0] : name;
-        var value = seen_sign ? argval[0] : argval[1];
-        seen_sign = seen_sign || argval.length === 2;
-        if (seen_sign && name.length === 0) 
+        else
         {
-            break;    // What, no arg name?
+            if (!seen_sign)
+            {
+                var argval = splitAt("=", value);
+                name = (name.length === 0) ? argval[0] : name;
+                value = argval[1];
+                seen_sign = seen_sign || argval.length === 2;
+            }
+            if (seen_sign && name.length === 0) 
+            {
+                break;    // What, no arg name?
+            }
+            if (seen_sign && value.length > 0)
+            {
+                var arg;
+                if (value.match(/^[-+0-9]/))
+                {
+                    arg = parseFloat(value);
+                }
+                else if (value.match(/^'.*'$/) || value.match(/^".*"$/))
+                {
+                    arg = value.substr(1, value.length - 2);
+                }
+                else if (value.lastIndexOf("'", 0) === 0)
+                {
+                    arg = value.substr(1);
+                    single_quoted = true;
+                }
+                else if (value.lastIndexOf('"', 0) === 0)
+                {
+                    arg = value.substr(1);
+                    double_quoted = true;
+                }
+                else
+                {
+                    arg = valueFor(value, args.$model);
+                }
+                args[name] = arg;
+            }
         }
-        if (seen_sign && value.length > 0)
+        if (seen_sign && value.length > 0 && !single_quoted && !double_quoted)
         {
-            var arg;
-            if (value.match(/^[-+0-9]/))
-            {
-                arg = parseFloat(value);
-            }
-            else if (value.match(/^'.*'$/) || value.match(/^".*"$/))
-            {
-                arg = value.substr(1, value.length - 2);
-            }
-            else
-            {
-                arg = valueFor(value, args.$model);
-            }
-            args[name] = arg;
             name = "";
             seen_sign = false;
         }
@@ -165,4 +193,3 @@ function valueFor(name, model) {
     }
     return value;
 }
-
