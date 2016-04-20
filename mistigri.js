@@ -1,17 +1,19 @@
 // Mistigri /// Σ:{
 // Mustache-inspired JavaScript template engine
 
+/*
+Sample use
 var template = "{{&type}} template; {{#person}}\n{{name default ='Madam'}} loves Σ:{ " +
     '{{love yes="much" no="not"}}{{/person}}';
 var model = {
     type: "Test",
-    love: true,
-    person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}]};
+    love: false,
+    person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}, {}]};
 alert(prrcess(template, model));
+*/
 
 function prrcess(template, model, config) {
     open_brace = (config !== undefined && 'openBrace' in config) ? config.openBrace : "{{";
-    return render(template.split(open_brace), model, config);
 
 var render = function render(parts, model, config) {
     var close_brace = (config !== undefined && 'closeBrace' in config) ? config.closeBrace : "}}";
@@ -214,6 +216,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
     var result = "";
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
     parts[0] = content;
+    args.$invertBlock = invert;
     args.$template = parts;
     var value = valueFor(action, args.$model);
     if (typeof value === 'function')
@@ -266,4 +269,6 @@ var valueFor = function valueFor(name, model) {
     }
     return value;
 }
+
+    return render(template.split(open_brace), model, config);
 }
