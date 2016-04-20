@@ -7,11 +7,16 @@ var model = {
     type: "Test",
     love: true,
     person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}]};
-alert(render(template.split("{{"), model));
+alert(prrcess(template, model));
 
-function render(parts, model, config) {
+function prrcess(template, model, config) {
+    open_brace = (config !== undefined && 'openBrace' in config) ? config.openBrace : "{{";
+    return render(template.split(open_brace), model, config);
+
+var render = function render(parts, model, config) {
     var close_brace = (config !== undefined && 'closeBrace' in config) ? config.closeBrace : "}}";
     var default_text = (config !== undefined && 'placeholderText' in config) ? config.placeholderText : "N/A";
+    var default_escape = (config !== undefined && 'escapeFunction' in config) ? config.escapeFunction : escapeHtml;
     var text = parts[0];
     var rendered = text;
     var position = rendered.length + close_brace.length;
@@ -65,7 +70,7 @@ function render(parts, model, config) {
             default:
                 if (in_block > 0) break;
                 action = parseAction(mistigri, args);
-                rendered += escapeHtml(handleValue(action, args));
+                rendered += default_escape(handleValue(action, args));
         }
         if (in_block <= 0)
         {
@@ -77,7 +82,7 @@ function render(parts, model, config) {
     return rendered;
 }
 
-function splitAt(pattern, text) {
+var splitAt = function splitAt(pattern, text) {
     var found = text.indexOf(pattern);
     if (found === -1)
     {
@@ -89,7 +94,7 @@ function splitAt(pattern, text) {
     }
 }
 
-function parseAction(tag, args) {
+var parseAction = function parseAction(tag, args) {
     var parts = tag.split(/\s+/);
     var action = parts.shift();
     if (action.length === 0)
@@ -100,8 +105,7 @@ function parseAction(tag, args) {
     return action;
 }
 
-function getArgs(parts, args)
-{
+var getArgs = function getArgs(parts, args) {
     var name = "";
     var seen_sign = false;
     var single_quoted = false;
@@ -169,14 +173,14 @@ function getArgs(parts, args)
     return !seen_sign;
 }
 
-function escapeHtml(html) {
+var escapeHtml = function escapeHtml(html) {
     var text = document.createTextNode(html);
     var div = document.createElement('div');
     div.appendChild(text);
     return div.innerHTML;
 }
 
-function handleValue(action, args) {
+var handleValue = function handleValue(action, args) {
     var value = valueFor(action, args.$model);
     var result;
     switch (typeof value) 
@@ -206,8 +210,7 @@ function handleValue(action, args) {
     return result;
 }
 
-function handleBlock(action, args, content, parts, config)
-{
+var handleBlock = function handleBlock(action, args, content, parts, config) {
     var result = "";
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
     parts[0] = content;
@@ -216,7 +219,7 @@ function handleBlock(action, args, content, parts, config)
     if (typeof value === 'function')
     {
         value = value(args);
-        if (typeof value == 'string')
+        if (typeof value === 'string')
         {
             return value; // add to output
         }
@@ -250,7 +253,7 @@ function handleBlock(action, args, content, parts, config)
     return result;
 }
 
-function valueFor(name, model) {
+var valueFor = function valueFor(name, model) {
     var path = name.split(".");
     var value = model[path.shift()];
     for (var child in path)
@@ -262,4 +265,5 @@ function valueFor(name, model) {
         value = value[path[child]];
     }
     return value;
+}
 }
