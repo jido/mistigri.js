@@ -9,11 +9,15 @@ var model = {
     type: "Test",
     love: false,
     person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}, {}]};
-alert(prrcess(template, model));
+alert(mistigri.prrcess(template, model));
 */
 
-function prrcess(template, model, config) {
+var mistigri = (function(){
+
+var main = function prrcess(template, model, config) {
     open_brace = (config !== undefined && 'openBrace' in config) ? config.openBrace : "{{";
+    return render(template.split(open_brace), model, config);
+}
 
 var render = function render(parts, model, config) {
     var close_brace = (config !== undefined && 'closeBrace' in config) ? config.closeBrace : "}}";
@@ -270,5 +274,5 @@ var valueFor = function valueFor(name, model) {
     return value;
 }
 
-    return render(template.split(open_brace), model, config);
-}
+return {prrcess: main};
+})();
