@@ -210,10 +210,16 @@ function handleBlock(action, args, content, parts, config)
 {
     var result = "";
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
+    parts[0] = content;
+    args.$template = parts;
     var value = valueFor(action, args.$model);
     if (typeof value === 'function')
     {
         value = value(args);
+        if (typeof value == 'string')
+        {
+            return value; // add to output
+        }
     }
     var suffix = ('suffix' in args) ? args.suffix : "";
     var is_empty = !value;
