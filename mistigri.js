@@ -211,9 +211,13 @@ var handleValue = function handleValue(action, args, bind) {
             break;
         case 'function':
             result = value(args);
+            while (typeof result === 'function')
+            {
+                result = result(args);
+            }
             break;
         default:
-            alert(typeof value);
+            // Not sure what to do
             return value;
     }
     if (result === undefined || result === null)
