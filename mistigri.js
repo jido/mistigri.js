@@ -3,6 +3,7 @@
 
 /*
 Sample use
+----------
 var template = "{{&type}} template; {{#person}}\n{{name default ='Madam'}} loves Σ:{ " +
     '{{love yes="much" no="not"}}{{/person}}';
 var model = {
@@ -14,18 +15,24 @@ alert(mistigri.prrcess(template, model));
 
 var mistigri = (function(){
 
+var DEFAULT_OPEN_BRACE = "{{";
+var DEFAULT_CLOSE_BRACE = "}}";
+var DEFAULT_PLACEHOLDER_TEXT = "N/A";
+var DEFAULT_ESCAPE_FUNCTION = escapeHtml;
+
 var main = function prrcess(template, model, config) {
-    open_brace = (config !== undefined && 'openBrace' in config) ? config.openBrace : "{{";
+    open_brace = (config && 'openBrace' in config) ? config.openBrace : DEFAULT_OPEN_BRACE;
     return render(template.split(open_brace), model, config);
 }
 
 var render = function render(parts, model, config) {
-    var close_brace = (config !== undefined && 'closeBrace' in config) ? config.closeBrace : "}}";
-    var default_text = (config !== undefined && 'placeholderText' in config) ? config.placeholderText : "N/A";
-    var default_escape = (config !== undefined && 'escapeFunction' in config) ? config.escapeFunction : escapeHtml;
+    var open_brace_len = (config && 'openBrace' in config) ? config.openBrace.length : DEFAULT_OPEN_BRACE.length;
+    var close_brace = (config && 'closeBrace' in config) ? config.closeBrace : DEFAULT_CLOSE_BRACE;
+    var default_text = (config && 'placeholderText' in config) ? config.placeholderText : DEFAULT_PLACEHOLDER_TEXT;
+    var default_escape = (config && 'escapeFunction' in config) ? config.escapeFunction : DEFAULT_ESCAPE_FUNCTION;
     var text = parts[0];
     var rendered = text;
-    var position = rendered.length + close_brace.length;
+    var position = rendered.length;
     var in_block = 0;
     var start;
     var start_text;
@@ -54,7 +61,7 @@ var render = function render(parts, model, config) {
             case "/":
                 --in_block;
                 if (in_block > 0) break;
-                if (in_block < 0 || mistigri.indexOf(action) !== 1)
+                if (in_block < 0 || mistigri.replace(/^\/\s\s*/, "") !== action)
                 {
                     rendered += mistigri;       // invalid close tag
                     break;
@@ -83,7 +90,7 @@ var render = function render(parts, model, config) {
             text = mitext[1];
             rendered += text;
         }
-        position += part.length + close_brace.length;
+        position += part.length + open_brace_len;
     }
     return rendered;
 }
