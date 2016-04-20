@@ -1,19 +1,23 @@
 // Mistigri /// Σ:{
 // Mustache-inspired JavaScript template engine
 
-var template = "Test template; {{&person.name default ='Madam'}} loves Σ:{ " +
-    '{{love yes="much" no="not"}}';
+var template = "{{&type}} template; {{#person}}\n{{name default ='Madam'}} loves Σ:{ " +
+    '{{love yes="much" no="not"}}{{/person}}';
 var model = {
-    person: {name: "jido"},
-    love: true
-};
+    type: "Test",
+    love: true,
+    person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}]};
 alert(render(template.split("{{"), model));
 
 function render(parts, model, config) {
-    var close_brace = (config && 'closeBrace' in config) ? config.closeBrace : "}}";
-    var default_text = (config && 'placeholderText' in config) ? config.placeholderText : "N/A";
-    var rendered = parts[0];
+    var close_brace = (config !== undefined && 'closeBrace' in config) ? config.closeBrace : "}}";
+    var default_text = (config !== undefined && 'placeholderText' in config) ? config.placeholderText : "N/A";
+    var text = parts[0];
+    var rendered = text;
     var position = rendered.length + close_brace.length;
+    var in_block = 0;
+    var start;
+    var start_text;
     for (var partnum = 1; partnum < parts.length; ++partnum) 
     {
         var part = parts[partnum];
@@ -24,28 +28,50 @@ function render(parts, model, config) {
         switch (part.substr(0, 1)) 
         {
             case "#":
-                console.log("Conditional: " + mistigri);
-                break;
             case "^":
-                console.log("Anti-conditional: " + mistigri);
+                if (in_block > 0)
+                {
+                    ++in_block;
+                    break;      // break out of switch case
+                }
+                in_block = 1;
+                action = parseAction(mistigri.substr(1), args);
+                args.$prelude = text;
+                start = partnum;
+                start_text = mitext[1];
                 break;
             case "/":
-                console.log("Block end: " + mistigri);
+                --in_block;
+                if (in_block > 0) break;
+                if (in_block < 0 || mistigri.indexOf(action) !== 1)
+                {
+                    rendered += mistigri;       // invalid close tag
+                    break;
+                }
+                args.$ending = mitext[1];
+                rendered += handleBlock(action, args, start_text, parts.slice(start, partnum), config);
                 break;
             case ">":
+                if (in_block > 0) break;
                 console.log("Include: " + mistigri);
                 break;
             case "!":
-                break; // just a comment
+                break;  // just a comment
             case "&":
+                if (in_block > 0) break;
                 action = parseAction(mistigri.substr(1), args);
                 rendered += handleValue(action, args);
                 break;
             default:
+                if (in_block > 0) break;
                 action = parseAction(mistigri, args);
                 rendered += escapeHtml(handleValue(action, args));
         }
-        rendered += mitext[1];
+        if (in_block <= 0)
+        {
+            text = mitext[1];
+            rendered += text;
+        }
         position += part.length + close_brace.length;
     }
     return rendered;
@@ -176,6 +202,44 @@ function handleValue(action, args) {
     if (result === undefined || result === null)
     {
         return ('default' in args) ? args.default : args.$placeholderText;
+    }
+    return result;
+}
+
+function handleBlock(action, args, content, parts, config)
+{
+    var result = "";
+    var invert = (parts[0].lastIndexOf("^", 0) === 0);
+    var value = valueFor(action, args.$model);
+    if (typeof value === 'function')
+    {
+        value = value(args);
+    }
+    var suffix = ('suffix' in args) ? args.suffix : "";
+    var is_empty = !value;
+    var is_array = !is_empty && Array.isArray(value);
+    var list = value;
+    if (!is_array)
+    {
+        list = [value];
+    }
+    if ((is_empty && invert) || (!is_empty && !invert))
+    {
+        parts[0] = content;
+        for (var index in list)
+        {
+            var item = list[index];
+            var submodel = args.$model;
+            if (typeof item === 'object' && item !== null)
+            {
+                submodel = Object.create(submodel);
+                for (var key in item)
+                {
+                    submodel[key + suffix] = item[key];
+                }
+            }
+            result += render(parts, submodel, config);
+        }
     }
     return result;
 }
