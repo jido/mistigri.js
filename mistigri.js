@@ -43,12 +43,16 @@ var render = function render(parts, model, config) {
     var in_block = 0;
     var start;
     var start_text;
+    var args;
     for (var partnum = 1; partnum < parts.length; ++partnum) 
     {
         var part = parts[partnum];
         var mitext = splitAt(close_brace, part);
         var mistigri = mitext[0];
-        var args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
+        if (!in_block)
+        {
+            args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
+        }
         var action;
         switch (part.substr(0, 1)) 
         {
@@ -115,42 +119,63 @@ var splitAt = function splitAt(pattern, text) {
 }
 
 var parseAction = function parseAction(tag, args, bind) {
-    var parts = tag.split(/\s+/);
-    var action = parts.shift();
-    if (action.length === 0)
+    var action = tag;
+    tag = tag.replace(/^\s\s*/, "");
+    var parts = /^(\S*)\s+(.*)/.exec(tag);
+    if (parts !== null)
     {
-        action = parts.shift();
+        action = parts[1];
+        getArgs(parts[2], args, bind);
     }
-    getArgs(parts, args, bind);
     return action;
 }
 
-var getArgs = function getArgs(parts, args, bind) {
+var unbackslash = function(_, char) {
+    switch (char)
+    {
+        case "n":
+            return "\n";
+        case "t":
+            return "\t";
+        default:
+            return char;
+    }
+}
+
+var getArgs = function getArgs(text, args, bind) {
+    var cleaned = text.replace(/\\./, "\\1");
     var name = "";
     var seen_sign = false;
     var single_quoted = false;
     var double_quoted = false;
-    for (var partnum in parts) 
+    var end = -1;
+    var find_space = /\s+/g;
+    var space;
+    for (var start = 0; space !== null; start = find_space.lastIndex) 
     {
-        var value = parts[partnum];
+        space = find_space.exec(cleaned);
+        end = (space === null) ? cleaned.length : space.index;
+        var value = cleaned.substring(start, end);
         if (single_quoted || double_quoted)
         {
-            single_quoted = (single_quoted && value.indexOf("'", value.length - 1) === -1);
-            double_quoted = (double_quoted && value.indexOf('"', value.length - 1) === -1);
-            if (!single_quoted && !double_quoted)
-            {
-                value = value.substr(0, value.length - 1);     // closed quote
-            }
-            args[name] += " " + value;
+            single_quoted = (single_quoted && value.indexOf("'", -1) === -1);
+            double_quoted = (double_quoted && value.indexOf('"', -1) === -1);
+            var shift = (single_quoted || double_quoted) ? 0 : 1; // closing quote
+            args[name] += " " + text.substring(start, end - shift).replace(/\\(.)/, unbackslash);
         }
         else
         {
             if (!seen_sign)
             {
                 var argval = splitAt("=", value);
-                name = (name.length === 0) ? argval[0] : name;
+                if (argval[0].length > 0)
+                {
+                    name = argval[0];
+                    start += name.length;
+                }
                 value = argval[1];
-                seen_sign = seen_sign || argval.length === 2;
+                seen_sign = (argval.length === 2);
+                start += seen_sign ? 1 : 0;
             }
             if (seen_sign && name.length === 0) 
             {
@@ -159,22 +184,22 @@ var getArgs = function getArgs(parts, args, bind) {
             if (seen_sign && value.length > 0)
             {
                 var arg;
-                if (value.match(/^[-+0-9]/))
+                if (/^[-+0-9]/.test(value))
                 {
                     arg = parseFloat(value);
                 }
-                else if (value.match(/^'.*'$/) || value.match(/^".*"$/))
+                else if (/^'.*'$/.test(value) || /^".*"$/.test(value))
                 {
-                    arg = value.substr(1, value.length - 2);
+                    arg = text.substring(start + 1, end - 1).replace(/\\(.)/, unbackslash);
                 }
                 else if (value.lastIndexOf("'", 0) === 0)
                 {
-                    arg = value.substr(1);
+                    arg = text.substring(start + 1, end).replace(/\\(.)/, unbackslash);
                     single_quoted = true;
                 }
                 else if (value.lastIndexOf('"', 0) === 0)
                 {
-                    arg = value.substr(1);
+                    arg = text.substring(start + 1, end).replace(/\\(.)/, unbackslash);
                     double_quoted = true;
                 }
                 else
