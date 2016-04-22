@@ -37,8 +37,7 @@ var render = function render(parts, model, config) {
     var default_text = (config && 'placeholderText' in config) ? config.placeholderText : DEFAULT_PLACEHOLDER_TEXT;
     var default_escape = (config && 'escapeFunction' in config) ? config.escapeFunction : DEFAULT_ESCAPE_FUNCTION;
     var bind = (config && 'methodCall' in config) ? config.methodCall : DEFAULT_METHOD_CALL;
-    var text = parts[0];
-    var rendered = text;
+    var rendered = parts[0];
     var position = rendered.length;
     var in_block = 0;
     var start;
@@ -50,6 +49,7 @@ var render = function render(parts, model, config) {
         var part = parts[partnum];
         var mitext = splitAt(close_brace, part);
         var mistigri = mitext[0];
+        var text = mitext[1]
         if (!in_block)
         {
             args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
@@ -65,9 +65,9 @@ var render = function render(parts, model, config) {
                 }
                 in_block = 1;
                 action = parseAction(mistigri.substr(1), args, bind);
-                args.$prelude = text;
+                args.$prelude = rendered;
                 start = partnum;
-                start_text = mitext[1];
+                start_text = text;
                 break;
             case "/":
                 --in_block;
@@ -77,7 +77,7 @@ var render = function render(parts, model, config) {
                     rendered += mistigri;       // invalid close tag
                     break;
                 }
-                args.$ending = mitext[1];
+                args.$ending = text;
                 rendered += handleBlock(action, args, start_text, parts.slice(start, partnum), config);
                 break;
             case ">":
@@ -98,10 +98,9 @@ var render = function render(parts, model, config) {
         }
         if (in_block <= 0)
         {
-            text = mitext[1];
             rendered += text;
         }
-        position += part.length + open_brace_len;
+        position += open_brace_len + part.length;
     }
     return rendered;
 }
