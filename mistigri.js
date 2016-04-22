@@ -43,6 +43,7 @@ var render = function render(parts, model, config) {
     var in_block = 0;
     var start;
     var start_text;
+    var action;
     var args;
     for (var partnum = 1; partnum < parts.length; ++partnum) 
     {
@@ -53,7 +54,6 @@ var render = function render(parts, model, config) {
         {
             args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
         }
-        var action;
         switch (part.substr(0, 1)) 
         {
             case "#":
@@ -119,12 +119,11 @@ var splitAt = function splitAt(pattern, text) {
 }
 
 var parseAction = function parseAction(tag, args, bind) {
-    var action = tag;
-    tag = tag.replace(/^\s\s*/, "");
-    var parts = /^(\S*)\s+(.*)/.exec(tag);
-    if (parts !== null)
+    var parts = /^\s*(\S+)\s*(.*)/.exec(tag);
+    if (parts === null) return "";
+    var action = parts[1];
+    if (parts[2].length > 0)
     {
-        action = parts[1];
         getArgs(parts[2], args, bind);
     }
     return action;
@@ -278,7 +277,6 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
     }
     if ((is_empty && invert) || (!is_empty && !invert))
     {
-        parts[0] = content;
         for (var index in list)
         {
             var item = list[index];
