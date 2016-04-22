@@ -145,7 +145,8 @@ var unbackslash = function(_, char) {
 }
 
 var getArgs = function getArgs(text, args, bind) {
-    var cleaned = text.replace(/\\[^]/, "\\1");
+    var backslashes = /\\([^])/g;
+    var cleaned = text.replace(backslashes, "\\1");
     var name = "";
     var seen_sign = false;
     var single_quoted = false;
@@ -163,7 +164,7 @@ var getArgs = function getArgs(text, args, bind) {
             single_quoted = (single_quoted && value.indexOf("'", -1) === -1);
             double_quoted = (double_quoted && value.indexOf('"', -1) === -1);
             var shift = (single_quoted || double_quoted) ? 0 : 1; // closing quote
-            args[name] += " " + text.substring(start, end - shift).replace(/\\([^])/, unbackslash);
+            args[name] += " " + text.substring(start, end - shift).replace(backslashes, unbackslash);
         }
         else
         {
@@ -192,16 +193,16 @@ var getArgs = function getArgs(text, args, bind) {
                 }
                 else if (/^'[^]*'$/.test(value) || /^"[^]*"$/.test(value))
                 {
-                    arg = text.substring(start + 1, end - 1).replace(/\\([^])/, unbackslash);
+                    arg = text.substring(start + 1, end - 1).replace(backslashes, unbackslash);
                 }
                 else if (value.lastIndexOf("'", 0) === 0)
                 {
-                    arg = text.substring(start + 1, end).replace(/\\([^])/, unbackslash);
+                    arg = text.substring(start + 1, end).replace(backslashes, unbackslash);
                     single_quoted = true;
                 }
                 else if (value.lastIndexOf('"', 0) === 0)
                 {
-                    arg = text.substring(start + 1, end).replace(/\\([^])/, unbackslash);
+                    arg = text.substring(start + 1, end).replace(backslashes, unbackslash);
                     double_quoted = true;
                 }
                 else
