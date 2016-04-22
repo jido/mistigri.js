@@ -281,6 +281,8 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
         {
             var item = list[index];
             var submodel = args.$model;
+            submodel.$item = item;
+            submodel.$count = index + 1;
             if (typeof item === 'object' && item !== null)
             {
                 submodel = Object.create(submodel);
@@ -297,15 +299,19 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
 
 var valueFor = function valueFor(name, model, bind) {
     var path = name.split(".");
-    var value = model[path.shift()];
+    if (path[0].length === 0)
+    {
+        return (path.length === 2 && path[1].length === 0) ? model.$item : null;
+    }
+    var value = model;
     for (var child in path)
     {
-        if (value === undefined || value === null)
-        {
-            break;
-        }
         var next = value[path[child]];
-        if (bind && typeof next === 'function')
+        if (next === undefined || next === null)
+        {
+            return null;
+        }
+        if (bind && child > 0 && typeof next === 'function')
         {
             var saved = value;
             next = next.bind(saved);
