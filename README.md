@@ -16,9 +16,7 @@ Supported features
   Nested values are allowed, for example "person.name".
   
   If the name is associated with a function then this function is
-  called to provide a value. By default "this" is not bound. For
-  methods to work as expected, {methodCall: true} should be set in the
-  configuration.
+  called to provide a value. See also Configuration Options.
   
 ~~~
 {{name argument = value}}
@@ -59,7 +57,24 @@ Supported features
   * as many times as there are elements in the array if the value is
   an array
 
----
+The ``{{.}}`` name represents the value or the current item in the
+  array.
+  
+  The "tag" argument can be used to specify a HTML tag to repeat when
+  there are two or more items in the array. Mistigri looks for the
+  tag in the text that comes immediately before the block, stopping
+  at the first Mistigri tag. It does the same for the close tag in
+  the text that follows the block. For example, to insert a new table
+  row for each person use:
+  
+~~~
+<table>
+   <tr>
+      <td>{{#person tag="TR"}}{{first_name}}</td>
+      <td>{{last_name}}{{/person}}</td>
+   </tr>
+</table>
+~~~
 
   If name is associated with a function returning a string, the
   return value of this function is inserted as text. If it returns 
@@ -79,9 +94,7 @@ Supported features
   * the text is inserted zero times if the value is not empty
   * the text is inserted once if the value is empty
 
----  
-
-  When the value is a function special argument "$invertBlock" is
+When the value is a function the special argument "$invertBlock" is
   set in the object to indicate whether the block is inverted or not.
   
 ~~~
@@ -90,4 +103,70 @@ Supported features
 
   Does not insert anything.
   
-  The comment cannot contain "{{" or "}}".
+  The comment cannot contain ``{{`` or ``}}``.
+
+Configuration options
+---
+
+  __openBrace__ : _string_
+  
+  The characters that open a Mistigri tag. The default is ``{{``.
+  
+  __closeBrace__ : _string_
+  
+  The characters that close a Mistigri tag. The default is ``}}``.
+  
+  __placeholderText__ : _string_
+  
+  The text to insert as placeholder when there is no appropriate 
+  value to insert. The default is "N/A".
+  
+  __escapeFunction__ : _function(string) : string_
+  
+  The escape function to use when the tag does not start with 
+  ``&``. The default is to escape HTML characters (requires DOM).
+  
+  __methodCall__ : _boolean_
+  
+  Controls the binding of "this" in function calls, which allows 
+  object methods to work as expected.
+  
+  For security reasons the default is _false_.
+
+Special names added to the model
+---
+
+  __$item__
+  
+  The value or the current item in the array inside a block.
+  
+  Always refers to the current block.
+  
+  __$item*suffix*__
+  
+  If a "suffix" argument is specified, refers to $item in the 
+  corresponding block.
+  
+  __$count__
+  
+  The count of the item in the array. Starts with ``1`` and increases
+  by one for each additional item. If the value is not an array or the 
+  block is inverted then $count is always ``1``.
+  
+  Always refers to the current block.
+  
+  __$count*suffix*__
+  
+  If a "suffix" argument is specified, refers to $count in the
+  corresponding block.
+  
+  __$total__
+  
+  The total number of items in the array. Its value is ``1`` if the value 
+  is not an array.
+  
+  If the block is inverted, $total takes the value ``0``.
+  
+  __$invertBlock__
+  
+  True if the current block is inverted.
