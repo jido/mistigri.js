@@ -282,7 +282,9 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
             var item = list[index];
             var submodel = args.$model;
             submodel.$item = item;
+            submodel["$item" + suffix] = item;
             submodel.$count = index + 1;
+            submodel["$count" + suffix] = index + 1;
             if (typeof item === 'object' && item !== null)
             {
                 submodel = Object.create(submodel);
