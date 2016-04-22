@@ -183,7 +183,7 @@ Special arguments passed to all functions
   __$template__ : _array of string_
   
   The template being currently processed. The template is split on
-  openBrace, it can be recombined using join("{{") to recover the
+  openBrace, it can be recombined using ``join("{{")`` to recover the
   original text.
   
   __$model__ : _object_
@@ -193,13 +193,13 @@ Special arguments passed to all functions
 Special arguments passed to a block opening function
 ---
 
+  Note: the $template and $model passed to a block opening function
+  refer to the template and model within the block. However $position 
+  refers to the position in the enclosing template.
+
   __$invertBlock__ : _boolean_
   
   True if the current block is inverted.
-
-  __$template__ : _array of string_
-  
-  The template within the block.
 
   __$prelude__ : _string_
   
