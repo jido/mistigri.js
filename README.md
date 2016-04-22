@@ -122,7 +122,7 @@ Configuration options
   The text to insert as placeholder when there is no appropriate 
   value to insert. The default is "N/A".
   
-  __escapeFunction__ : _function(string) : string_
+  __escapeFunction__ : _function(string) &#x2192; string_
   
   The escape function to use when the tag does not start with 
   ``&``. The default is to escape HTML characters (requires DOM).
@@ -173,6 +173,38 @@ Special names added to the model
   If a "suffix" argument is specified, refers to $total in the
   corresponding block.
   
-  __$invertBlock__
+Special arguments passed to all functions
+---
+
+  __$position__ : _number_
+  
+  Indicates the position of the Mistigri tag in the template.
+  
+  __$template__ : _array of string_
+  
+  The template being currently processed. The template is split on
+  openBrace, it can be recombined using join("{{") to recover the
+  original text.
+  
+  __$model__ : _object_
+  
+  The model available in the current template.
+  
+Special arguments passed to a block opening function
+---
+
+  __$invertBlock__ : _boolean_
   
   True if the current block is inverted.
+
+  __$template__ : _array of string_
+  
+  The template within the block.
+
+  __$prelude__ : _string_
+  
+  The text between previous Mistigri tag and the current block.
+  
+  __$ending__ : _string_
+  
+  The text between the current block and next Mistigri tag.
