@@ -190,7 +190,7 @@ var getArgs = function getArgs(text, args, bind) {
                 {
                     arg = parseFloat(value);
                 }
-                else if (/^'[^]*'$/.test(value) || /^".*"$/.test(value))
+                else if (/^'[^]*'$/.test(value) || /^"[^]*"$/.test(value))
                 {
                     arg = text.substring(start + 1, end - 1).replace(/\\([^])/, unbackslash);
                 }
@@ -278,10 +278,11 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
         if ('tag' in args)
         {
             var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
-            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase() + ">");
+            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
             if (left !== -1 && right !== -1)
             {
-                middle = args.$ending.substr(0, args.$ending.indexOf(">", right) + 1) + args.$prelude.substr(left);
+                right = args.$ending.indexOf(">", right) + 1;
+                middle = args.$ending.substr(0, right) + args.$prelude.substr(left);
             }
         }
         var list = value;
@@ -289,14 +290,16 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
         {
             list = [value];
         }
+        var count = 0;
         for (var index in list)
         {
+            count += 1;
             var item = list[index];
             var submodel = args.$model;
             submodel.$item = item;
             submodel["$item" + suffix] = item;
-            submodel.$count = index + 1;
-            submodel["$count" + suffix] = index + 1;
+            submodel.$count = count;
+            submodel["$count" + suffix] = count;
             if (typeof item === 'object' && item !== null)
             {
                 submodel = Object.create(submodel);
@@ -305,7 +308,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
                     submodel[key + suffix] = item[key];
                 }
             }
-            result += (index ? middle : "") + render(parts, submodel, config);
+            result += (count > 1 ? middle : "") + render(parts, submodel, config);
         }
     }
     return result;
