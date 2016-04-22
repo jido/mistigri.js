@@ -94,8 +94,9 @@ The ``{{.}}`` name represents the value or the current item in the
   * the text is inserted zero times if the value is not empty
   * the text is inserted once if the value is empty
 
-When the value is a function the special argument "$invertBlock" is
-  set in the object to indicate whether the block is inverted or not.
+When the value is a function the special argument $invertBlock is
+  set in the arguments object to indicate whether the block is inverted 
+  or not.
   
 ~~~
 {{! comment }}
@@ -166,6 +167,11 @@ Special names added to the model
   is not an array.
   
   If the block is inverted, $total takes the value ``0``.
+  
+  __$total*suffix*__
+  
+  If a "suffix" argument is specified, refers to $total in the
+  corresponding block.
   
   __$invertBlock__
   
