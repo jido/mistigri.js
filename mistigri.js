@@ -119,7 +119,7 @@ var splitAt = function splitAt(pattern, text) {
 }
 
 var parseAction = function parseAction(tag, args, bind) {
-    var parts = /^\s*(\S+)\s*(.*)/.exec(tag);
+    var parts = /^\s*(\S+)\s*([^]*)/.exec(tag);
     if (parts === null) return "";
     var action = parts[1];
     if (parts[2].length > 0)
@@ -130,19 +130,22 @@ var parseAction = function parseAction(tag, args, bind) {
 }
 
 var unbackslash = function(_, char) {
-    switch (char)
+    if (char === "n")
     {
-        case "n":
-            return "\n";
-        case "t":
-            return "\t";
-        default:
-            return char;
+        return "\n";
+    }
+    else if (char === "t")
+    {
+        return "\t";
+    }
+    else
+    {
+        return char;
     }
 }
 
 var getArgs = function getArgs(text, args, bind) {
-    var cleaned = text.replace(/\\./, "\\1");
+    var cleaned = text.replace(/\\[^]/, "\\1");
     var name = "";
     var seen_sign = false;
     var single_quoted = false;
@@ -160,7 +163,7 @@ var getArgs = function getArgs(text, args, bind) {
             single_quoted = (single_quoted && value.indexOf("'", -1) === -1);
             double_quoted = (double_quoted && value.indexOf('"', -1) === -1);
             var shift = (single_quoted || double_quoted) ? 0 : 1; // closing quote
-            args[name] += " " + text.substring(start, end - shift).replace(/\\(.)/, unbackslash);
+            args[name] += " " + text.substring(start, end - shift).replace(/\\([^])/, unbackslash);
         }
         else
         {
@@ -187,18 +190,18 @@ var getArgs = function getArgs(text, args, bind) {
                 {
                     arg = parseFloat(value);
                 }
-                else if (/^'.*'$/.test(value) || /^".*"$/.test(value))
+                else if (/^'[^]*'$/.test(value) || /^".*"$/.test(value))
                 {
-                    arg = text.substring(start + 1, end - 1).replace(/\\(.)/, unbackslash);
+                    arg = text.substring(start + 1, end - 1).replace(/\\([^])/, unbackslash);
                 }
                 else if (value.lastIndexOf("'", 0) === 0)
                 {
-                    arg = text.substring(start + 1, end).replace(/\\(.)/, unbackslash);
+                    arg = text.substring(start + 1, end).replace(/\\([^])/, unbackslash);
                     single_quoted = true;
                 }
                 else if (value.lastIndexOf('"', 0) === 0)
                 {
-                    arg = text.substring(start + 1, end).replace(/\\(.)/, unbackslash);
+                    arg = text.substring(start + 1, end).replace(/\\([^])/, unbackslash);
                     double_quoted = true;
                 }
                 else
@@ -267,16 +270,25 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
             return value; // add to output
         }
     }
-    var suffix = ('suffix' in args) ? args.suffix : "";
     var is_empty = !value;
-    var is_array = !is_empty && Array.isArray(value);
-    var list = value;
-    if (!is_array)
-    {
-        list = [value];
-    }
     if ((is_empty && invert) || (!is_empty && !invert))
     {
+        var suffix = ('suffix' in args) ? args.suffix : "";
+        var middle = ""; 
+        if ('tag' in args)
+        {
+            var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
+            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase() + ">");
+            if (left !== -1 && right !== -1)
+            {
+                middle = args.$ending.substr(0, args.$ending.indexOf(">", right) + 1) + args.$prelude.substr(left);
+            }
+        }
+        var list = value;
+        if (!Array.isArray(value))
+        {
+            list = [value];
+        }
         for (var index in list)
         {
             var item = list[index];
@@ -293,7 +305,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
                     submodel[key + suffix] = item[key];
                 }
             }
-            result += render(parts, submodel, config);
+            result += (index ? middle : "") + render(parts, submodel, config);
         }
     }
     return result;
@@ -323,5 +335,5 @@ var valueFor = function valueFor(name, model, bind) {
     return value;
 }
 
-return {prrcess: main};
+return {prrcess: main, process:main}; // note: prrcess gives cooler results, I swear. 
 })();
