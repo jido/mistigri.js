@@ -62,10 +62,10 @@ The ``{{.}}`` name represents the value or the current item in the
   
   The "tag" argument can be used to specify a HTML tag to repeat when
   there are two or more items in the array. Mistigri looks for the
-  tag in the text that comes immediately before the block, stopping
-  at the first Mistigri tag. It does the same for the close tag in
-  the text that follows the block. For example, to insert a new table
-  row for each person use:
+  tag in the text that comes immediately before the block, stopping at
+  the next enclosing block. It stops at the first Mistigri tag for the 
+  close tag. For example, to insert a new table row for each person 
+  use:
   
 ~~~
 <table>
