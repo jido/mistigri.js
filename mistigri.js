@@ -291,6 +291,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
         {
             list = [value];
         }
+        var total = invert ? 0 : list.length;
         var count = 0;
         for (var index in list)
         {
@@ -298,9 +299,14 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
             var item = list[index];
             var submodel = args.$model;
             submodel.$item = item;
-            submodel["$item" + suffix] = item;
             submodel.$count = count;
-            submodel["$count" + suffix] = count;
+            submodel.$total = total;
+            if (suffix.length > 0)
+            {
+                submodel["$item" + suffix] = item;
+                submodel["$count" + suffix] = count;
+                submodel["$total" + suffix] = total;
+            }
             if (typeof item === 'object' && item !== null)
             {
                 submodel = Object.create(submodel);
