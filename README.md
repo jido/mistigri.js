@@ -97,6 +97,27 @@ The ``{{.}}`` name represents the value or the current item in the
 When the value is a function the special argument $invertBlock is
   set in the arguments object to indicate whether the block is inverted 
   or not.
+
+~~~
+{{>path}}
+~~~
+
+  Includes another template at the specified location.
+  This feature requires a callback function to be called at the end of the
+  rendering.
+  
+  The path cannot contain spaces. But it can refer to an argument which is
+  allowed to contain spaces, for example:
+
+~~~
+{{>file file = "C:\\Program Files\\MyApplication\\template.mi"}}
+~~~
+
+  All the arguments make up the model of the included template.
+  
+  Templates are cached so they don't need to be loaded again and again,
+  and the argument ``render="no"`` indicates that the template should
+  only be preloaded and not rendered out.
   
 ~~~
 {{! comment }}
@@ -117,7 +138,7 @@ Configuration options
   
   The characters that close a Mistigri tag. The default is ``}}``.
   
-  __placeholderText__ : _string_
+  __placeholder__ : _string_
   
   The text to insert as placeholder when there is no appropriate 
   value to insert. The default is "N/A".
@@ -190,6 +211,10 @@ Special arguments passed to all functions
   
   The model available in the current template.
   
+  __$placeholder__ : _string_
+  
+  The configured placeholder text.
+  
 Special arguments passed to a block opening function
 ---
 
@@ -203,7 +228,8 @@ Special arguments passed to a block opening function
 
   __$prelude__ : _string_
   
-  The text between previous Mistigri tag and the current block.
+  The rendered text between the start of the enclosing block and the 
+  current block.
   
   __$ending__ : _string_
   
