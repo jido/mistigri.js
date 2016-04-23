@@ -352,7 +352,7 @@ var handleValue = function handleValue(action, args, bind) {
     }
     if (result === undefined || result === null)
     {
-        return ('default' in args) ? args.default : args.$placeholderText;
+        return ('default' in args) ? args.default : args.$placeholder;
     }
     return result;
 }
