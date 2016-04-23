@@ -17,7 +17,7 @@ var mistigri = (function(){
 
 var DEFAULT_OPEN_BRACE = "{{";
 var DEFAULT_CLOSE_BRACE = "}}";
-var DEFAULT_PLACEHOLDER_TEXT = "N/A";
+var DEFAULT_PLACEHOLDER = "N/A";
 var DEFAULT_METHOD_CALL = false;
 var DEFAULT_ESCAPE_FUNCTION = function escapeHtml(html) {
     var text = document.createTextNode(html);
@@ -25,20 +25,59 @@ var DEFAULT_ESCAPE_FUNCTION = function escapeHtml(html) {
     div.appendChild(text);
     return div.innerHTML;
 }
-
-var main = function prrcess(template, model, config) {
-    open_brace = (config && 'openBrace' in config) ? config.openBrace : DEFAULT_OPEN_BRACE;
-    return render(template.split(open_brace), model, config);
+var DEFAULT_READER = function ajaxReader(url, success, error) {
+    var request = new XMLHttpRequest();
+    request.open("GET", url, true);
+    request.onreadystatechange = function(event) {
+        if (this.readyState === 4)
+        {
+            if (this.status === 200)
+            {
+                success(this.responseText);
+            }
+            else
+            {
+                var miError = new Error("Mistigri ajaxReader error reading: " + url);
+                miError.ajaxState = this.readyState;
+                miError.httpStatus = this.status;
+                miError.httpResponse = this.statusText;
+                error(miError);
+            }
+        }
+    }
+    request.send();
 }
 
-var render = function render(parts, model, config) {
-    var open_brace_len = (config && 'openBrace' in config) ? config.openBrace.length : DEFAULT_OPEN_BRACE.length;
-    var close_brace = (config && 'closeBrace' in config) ? config.closeBrace : DEFAULT_CLOSE_BRACE;
-    var default_text = (config && 'placeholderText' in config) ? config.placeholderText : DEFAULT_PLACEHOLDER_TEXT;
-    var default_escape = (config && 'escapeFunction' in config) ? config.escapeFunction : DEFAULT_ESCAPE_FUNCTION;
-    var bind = (config && 'methodCall' in config) ? config.methodCall : DEFAULT_METHOD_CALL;
+var main = function prrcess(template, model, config, finish) {
+    open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
+    var includes = {work: [], offset: 0, cache: {}};
+    var rendered = render(template.split(open_brace), model, config, includes);
+    handleAllIncludes(includes, config, rendered, rendered.length, finish);
+    return rendered;
+}
+
+var feed = function feed(templates) {
+    return function readFromObject(path, success, error) {
+        if (path in templates)
+        {
+            success(templates[path]);
+        }
+        else
+        {
+            error(new Error("Mistigri was not fed template: " + path));
+        }
+    }
+}
+
+var render = function render(parts, model, config, includes) {
+    var open_brace_len = getOption('openBrace', DEFAULT_OPEN_BRACE, config).length;
+    var close_brace = getOption('closeBrace', DEFAULT_CLOSE_BRACE, config);
+    var default_text = getOption('placeholder', DEFAULT_PLACEHOLDER, config);
+    var default_escape = getOption('escapeFunction', DEFAULT_ESCAPE_FUNCTION, config);
+    var bind = getOption('methodCall', DEFAULT_METHOD_CALL, config);
     var rendered = parts[0];
     var position = rendered.length;
+    var offset = includes.offset;
     var in_block = 0;
     var start;
     var start_text;
@@ -52,7 +91,7 @@ var render = function render(parts, model, config) {
         var text = mitext[1]
         if (!in_block)
         {
-            args = {$position: position, $template: parts, $model: model, $placeholderText: default_text}; 
+            args = {$position: position, $template: parts, $model: model, $placeholder: default_text}; 
         }
         switch (part.substr(0, 1)) 
         {
@@ -72,17 +111,20 @@ var render = function render(parts, model, config) {
             case "/":
                 --in_block;
                 if (in_block > 0) break;
-                if (in_block < 0 || mistigri.replace(/^\/\s*/, "") !== action)
+                if (in_block < 0 || mistigri.substr(1).trim() !== action)
                 {
                     rendered += mistigri;       // invalid close tag
                     break;
                 }
                 args.$ending = text;
-                rendered += handleBlock(action, args, start_text, parts.slice(start, partnum), config);
+                includes.offset = offset + rendered.length;
+                rendered += handleBlock(action, args, start_text, parts.slice(start, partnum), config, includes);
                 break;
             case ">":
                 if (in_block > 0) break;
-                console.log("Include: " + mistigri);
+                action = parseAction(mistigri.substr(1), args, bind);
+                includes.offset = offset + rendered.length;
+                rendered += handleInclude(action, args, config, includes);
                 break;
             case "!":
                 break;  // just a comment
@@ -103,6 +145,67 @@ var render = function render(parts, model, config) {
         position += open_brace_len + part.length;
     }
     return rendered;
+}
+
+var handleInclude = function handleInclude(action, args, config, includes) {
+    delete args.$template;
+    delete args.$model;
+    delete args.$position;
+    delete args.$placeholder;
+    var path = valueFor(action, args, false);
+    if (path === null)
+    {
+        path = action;
+    }
+    var position = includes.offset;
+    if (path in includes.cache)
+    {
+        var sub_includes = {work: includes.work, offset: position, cache: includes.cache};
+        return render(includes.cache[path], args, config, sub_includes);
+    }
+    var preload = ('render' in args && args.render === "no");
+    includes.work.push({path: path, at: position, model: args, render: !preload});
+    return "";  // Rendered output will be inserted later
+}
+
+var handleAllIncludes = function handleAllIncludes(includes, config, rendered, size, finish) {
+    if (includes.work.length === 0)
+    {
+        if (finish !== undefined) finish(rendered);
+        return;
+    }
+    if (finish === undefined)
+    {
+        console.warn("Mistigri needs a callback - ignoring all includes");
+        return;
+    }
+    var open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
+    var reader = getOption('reader', DEFAULT_READER, config);
+    var include = includes.work.shift();
+    var position = include.at + rendered.length - size;   // position from end
+
+    reader(include.path, function(content) {
+        var template = content.split(open_brace);
+        includes.cache[include.path] = template;
+
+        var new_includes = {work: [], offset: position, cache: includes.cache};
+        if (include.render)
+        {
+            var inserted = render(template, include.model, config, new_includes);
+            rendered = rendered.substr(0, position) + inserted + rendered.substr(position);
+        }
+        handleAllIncludes(new_includes, config, rendered, rendered.length, function(new_rendered) {
+            handleAllIncludes(includes, config, new_rendered, size, finish);
+        });
+    },
+    function(error) {
+        console.error(error);
+        handleAllIncludes(includes, config, rendered, size, finish);
+    });
+}
+
+var getOption = function getOption(name, defaultValue, config) {
+    return (config && name in config) ? config[name] : defaultValue;
 }
 
 var splitAt = function splitAt(pattern, text) {
@@ -254,7 +357,7 @@ var handleValue = function handleValue(action, args, bind) {
     return result;
 }
 
-var handleBlock = function handleBlock(action, args, content, parts, config) {
+var handleBlock = function handleBlock(action, args, content, parts, config, includes) {
     var result = "";
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
     parts[0] = content;
@@ -285,11 +388,13 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
                 middle = args.$ending.substr(0, right) + args.$prelude.substr(left);
             }
         }
+
         var list = value;
         if (!Array.isArray(value))
         {
             list = [value];
         }
+        var offset = includes.offset;
         var total = invert ? 0 : list.length;
         var count = 0;
         for (var index in list)
@@ -314,7 +419,12 @@ var handleBlock = function handleBlock(action, args, content, parts, config) {
                     submodel[key + suffix] = item[key];
                 }
             }
-            result += (count > 1 ? middle : "") + render(parts, submodel, config);
+            if (count > 1)
+            {
+                result += middle;
+            }
+            includes.offset = offset + result.length;
+            result += render(parts, submodel, config, includes);
         }
     }
     return result;
@@ -344,5 +454,5 @@ var valueFor = function valueFor(name, model, bind) {
     return value;
 }
 
-return {prrcess: main, process:main}; // note: prrcess gives cooler results, I swear. 
+return {prrcess: main, process:main, feed: feed}; // note: prrcess gives cooler results, I swear. 
 })();
