@@ -155,6 +155,18 @@ Configuration options
   
   For security reasons the default is _false_.
 
+  __reader__ : _function(string, function(string), function(Error))_
+  
+  A function that reads a template and passes it to the first callback
+  when it is ready. The second callback can be used in case of error.
+  
+  The default is a function that does an Ajax request when provided
+  an URI.
+  
+  There is also a reader generator to use for testing purposes which
+  returns a reader when fed an object containing templates. It is
+  called mistigri.feed().
+
 Special names added to the model
 ---
 
