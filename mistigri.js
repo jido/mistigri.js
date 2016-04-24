@@ -256,23 +256,21 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
 }
 
 var handleInclude = function handleInclude(action, args, config, includes) {
+    var path = valueFor(action, args, false);
     delete args.$template;
     delete args.$model;
     delete args.$position;
     delete args.$placeholder;
-    var path = valueFor(action, args, false);
     if (path === null)
     {
         path = action;
     }
-    var position = includes.offset;
     if (path in includes.cache)
     {
-        var sub_includes = {work: includes.work, offset: position, cache: includes.cache};
-        return render(includes.cache[path], args, config, sub_includes);
+        return render(includes.cache[path], args, config, includes);
     }
     var preload = ('render' in args && args.render === "no");
-    includes.work.push({path: path, at: position, model: args, render: !preload});
+    includes.work.push({path: path, at: includes.offset, model: args, render: !preload});
     return "";  // Rendered output will be inserted later
 }
 
