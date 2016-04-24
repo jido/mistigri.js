@@ -1,4 +1,4 @@
-# mistigri.js
+# Mistigri.js
 JavaScript template engine inspired by Mustache.
 
 It could be called an antinome of Handlebars, extending Mustache 
@@ -169,8 +169,17 @@ Configuration options
   an URI.
   
   There is also a reader generator to use for testing purposes which
-  returns a reader when fed an object containing templates. It is
-  called mistigri.feed().
+  returns a reader when fed an object containing templates. This is
+  an example of use:
+
+~~~
+mistigri.process(
+  "Mistigri {{>include}}", 
+  {}, 
+  {reader: mistigri.feed({include: "catface Σ:{"})},
+  alert
+);
+~~~
 
 Special names added to the model
 ---
