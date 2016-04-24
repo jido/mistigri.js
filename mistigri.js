@@ -147,6 +147,114 @@ var render = function render(parts, model, config, includes) {
     return rendered;
 }
 
+var handleValue = function handleValue(action, args, bind) {
+    var value = valueFor(action, args.$model, bind);
+    var result;
+    switch (typeof value) 
+    {
+        case 'number':
+            return value;
+        case 'string':
+            return value;
+        case 'undefined':
+        case 'object':
+            result = value;
+            break;
+        case 'boolean':
+            result = value ? args.yes : args.no;
+            break;
+        case 'function':
+            result = value(args);
+            while (typeof result === 'function')
+            {
+                result = result(args);
+            }
+            break;
+        default:
+            // Not sure what to do
+            return value;
+    }
+    if (result === undefined || result === null)
+    {
+        return ('default' in args) ? args.default : args.$placeholder;
+    }
+    return result;
+}
+
+var handleBlock = function handleBlock(action, args, content, parts, config, includes) {
+    var result = "";
+    var invert = (parts[0].lastIndexOf("^", 0) === 0);
+    parts[0] = content;
+    args.$invertBlock = invert;
+    args.$template = parts;
+    var bind = (config && 'methodCall' in config) ? config.methodCall : DEFAULT_METHOD_CALL;
+    var value = valueFor(action, args.$model, bind);
+    while (typeof value === 'function')
+    {
+        value = value(args);
+        if (typeof value === 'string')
+        {
+            return value; // add to output
+        }
+    }
+    var is_empty_array = Array.isArray(value) && value.length === 0;
+    var is_empty = !value || is_empty_array;
+    if ((is_empty && invert) || (!is_empty && !invert))
+    {
+        var suffix = ('suffix' in args) ? args.suffix : "";
+        var middle = ""; 
+        if ('tag' in args)
+        {
+            var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
+            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
+            if (left !== -1 && right !== -1)
+            {
+                right = args.$ending.indexOf(">", right) + 1;
+                middle = args.$ending.substr(0, right) + args.$prelude.substr(left);
+            }
+        }
+
+        var list = value;
+        if (is_empty || !Array.isArray(value))
+        {
+            list = [is_empty_array? null : value];      // special handling for empty array
+        }
+        var offset = includes.offset;
+        var total = invert ? 0 : list.length;
+        var count = 0;
+        for (var index in list)
+        {
+            count += 1;
+            var item = list[index];
+            var submodel = args.$model;
+            submodel.$item = item;
+            submodel.$count = count;
+            submodel.$total = total;
+            if (suffix.length > 0)
+            {
+                submodel["$item" + suffix] = item;
+                submodel["$count" + suffix] = count;
+                submodel["$total" + suffix] = total;
+            }
+            if (typeof item === 'object' && item !== null)
+            {
+                submodel = Object.create(submodel);
+                for (var key in item)
+                {
+                    submodel[key + suffix] = item[key];
+                }
+            }
+            if (count > 1)
+            {
+                result += middle;
+            }
+            includes.offset = offset + result.length;
+            result += render(parts, submodel, config, includes);
+        }
+    }
+    return result;
+}
+
 var handleInclude = function handleInclude(action, args, config, includes) {
     delete args.$template;
     delete args.$model;
@@ -204,22 +312,6 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
     });
 }
 
-var getOption = function getOption(name, defaultValue, config) {
-    return (config && name in config) ? config[name] : defaultValue;
-}
-
-var splitAt = function splitAt(pattern, text) {
-    var found = text.indexOf(pattern);
-    if (found === -1)
-    {
-        return [text];
-    }
-    else
-    {
-        return [text.substr(0, found), text.substr(found + pattern.length)];
-    }
-}
-
 var parseAction = function parseAction(tag, args, bind) {
     var parts = /^\s*(\S+)\s*([^]*)/.exec(tag);
     if (parts === null) return "";
@@ -229,21 +321,6 @@ var parseAction = function parseAction(tag, args, bind) {
         getArgs(parts[2], args, bind);
     }
     return action;
-}
-
-var unbackslash = function(_, char) {
-    if (char === "n")
-    {
-        return "\n";
-    }
-    else if (char === "t")
-    {
-        return "\t";
-    }
-    else
-    {
-        return char;
-    }
 }
 
 var getArgs = function getArgs(text, args, bind) {
@@ -323,114 +400,6 @@ var getArgs = function getArgs(text, args, bind) {
     return !seen_sign;
 }
 
-var handleValue = function handleValue(action, args, bind) {
-    var value = valueFor(action, args.$model, bind);
-    var result;
-    switch (typeof value) 
-    {
-        case 'number':
-            return value;
-        case 'string':
-            return value;
-        case 'undefined':
-        case 'object':
-            result = value;
-            break;
-        case 'boolean':
-            result = value ? args.yes : args.no;
-            break;
-        case 'function':
-            result = value(args);
-            while (typeof result === 'function')
-            {
-                result = result(args);
-            }
-            break;
-        default:
-            // Not sure what to do
-            return value;
-    }
-    if (result === undefined || result === null)
-    {
-        return ('default' in args) ? args.default : args.$placeholder;
-    }
-    return result;
-}
-
-var handleBlock = function handleBlock(action, args, content, parts, config, includes) {
-    var result = "";
-    var invert = (parts[0].lastIndexOf("^", 0) === 0);
-    parts[0] = content;
-    args.$invertBlock = invert;
-    args.$template = parts;
-    var bind = (config && 'methodCall' in config) ? config.methodCall : DEFAULT_METHOD_CALL;
-    var value = valueFor(action, args.$model, bind);
-    while (typeof value === 'function')
-    {
-        value = value(args);
-        if (typeof value === 'string')
-        {
-            return value; // add to output
-        }
-    }
-    var is_empty_array = Array.isArray(value) && value.length === 0;
-    var is_empty = !value || is_empty_array;
-    if ((is_empty && invert) || (!is_empty && !invert))
-    {
-        var suffix = ('suffix' in args) ? args.suffix : "";
-        var middle = ""; 
-        if ('tag' in args)
-        {
-            var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
-            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
-            if (left !== -1 && right !== -1)
-            {
-                right = args.$ending.indexOf(">", right) + 1;
-                middle = args.$ending.substr(0, right) + args.$prelude.substr(left);
-            }
-        }
-
-        var list = value;
-        if (is_empty || !Array.isArray(value))
-        {
-            list = [is_empty_array? null : value];
-        }
-        var offset = includes.offset;
-        var total = invert ? 0 : list.length;
-        var count = 0;
-        for (var index in list)
-        {
-            count += 1;
-            var item = list[index];
-            var submodel = args.$model;
-            submodel.$item = item;
-            submodel.$count = count;
-            submodel.$total = total;
-            if (suffix.length > 0)
-            {
-                submodel["$item" + suffix] = item;
-                submodel["$count" + suffix] = count;
-                submodel["$total" + suffix] = total;
-            }
-            if (typeof item === 'object' && item !== null)
-            {
-                submodel = Object.create(submodel);
-                for (var key in item)
-                {
-                    submodel[key + suffix] = item[key];
-                }
-            }
-            if (count > 1)
-            {
-                result += middle;
-            }
-            includes.offset = offset + result.length;
-            result += render(parts, submodel, config, includes);
-        }
-    }
-    return result;
-}
-
 var valueFor = function valueFor(name, model, bind) {
     var path = name.split(".");
     if (path[0].length === 0)
@@ -453,6 +422,37 @@ var valueFor = function valueFor(name, model, bind) {
         value = next;
     }
     return value;
+}
+
+var unbackslash = function(_, char) {
+    if (char === "n")
+    {
+        return "\n";
+    }
+    else if (char === "t")
+    {
+        return "\t";
+    }
+    else
+    {
+        return char;
+    }
+}
+
+var splitAt = function splitAt(pattern, text) {
+    var found = text.indexOf(pattern);
+    if (found === -1)
+    {
+        return [text];
+    }
+    else
+    {
+        return [text.substr(0, found), text.substr(found + pattern.length)];
+    }
+}
+
+var getOption = function getOption(name, defaultValue, config) {
+    return (config && name in config) ? config[name] : defaultValue;
 }
 
 return {prrcess: main, process:main, feed: feed}; // note: prrcess gives cooler results, I swear. 
