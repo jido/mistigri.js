@@ -86,3 +86,4 @@ mistigri.prrcess("({{>rec test=test}})", {test: ["x", "y", "z"]}, {methodCall: t
     mistigri.feed({rec: "{{test.shift}}{{#test}}/{{>rec test= test}}{{/test}}"})}, test("(x/y/z)"));
 mistigri.prrcess("({{> all }})", {}, {reader:
     mistigri.feed({all: "{{>first}}, {{>second}}", first: "-{{>third}}-", second: "*{{>third}}*", third: "y"})}, test("(-y-, *y*)"))
+mistigri.process("{{here}}, {{here}}{{#here}}---{{here}}|{{.}}{{/here}}", {here: function(o) {return o.$position}}, {}, test("0, 10---3|18"));
