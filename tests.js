@@ -25,6 +25,7 @@ mistigri.prrcess("({{test no='F'}})", {test: false}, {}, test("(F)"));
 mistigri.prrcess("({{test}})", {test: {toString: function() {return this.x}, x: "O"}}, {}, test("(O)"));
 mistigri.prrcess("({{test.x}})", {test: {x: "O"}}, {}, test("(O)"));
 mistigri.prrcess("({{test.z}})", {test: {x: "O"}}, {}, test("(N/A)"));
+mistigri.prrcess("({{#test}}{{x}}{{/test}})", {test: {x: "O"}}, {}, test("(O)"));
 
 mistigri.prrcess("({{ \ntest}})", {test: "xyz"}, {}, test("(xyz)"));
 mistigri.prrcess("({{  test\t \n}})", {test: "xyz"}, {}, test("(xyz)"));
@@ -37,6 +38,12 @@ mistigri.prrcess("({{test 103}})", {test: "xyz"}, {}, test("(xyz)"));
 mistigri.prrcess("({{test x=103}})", {test: "xyz"}, {}, test("(xyz)"));
 mistigri.prrcess("({{test x=103=15}})", {test: "xyz"}, {}, test("(xyz)"));
 mistigri.prrcess("(*{{test}}|+{{test}})", {test: "xyz"}, {}, test("(*xyz|+xyz)"));
+
+mistigri.prrcess("({{test x=103}})", {test: function(o) {return o.x + 1}}, {}, test("(104)"));
+mistigri.prrcess("({{test x=+1.0e2}})", {test: function(o) {return o.x + 1}}, {}, test("(101)"));
+mistigri.prrcess("({{test x=103 y =1}})", {test: function(o) {return o.x + o.y}}, {}, test("(104)"));
+mistigri.prrcess("({{test \\x=103}})", {test: function(o) {return o["\\1"]}}, {}, test("(103)"));
+mistigri.prrcess("({{test x=1\\03}})", {test: function(o) {return o.x}}, {}, test("(1)"));
 
 mistigri.prrcess("({{#test}}*{{.}}+{{/test}})", {test: "xyz"}, {}, test("(*xyz+)"));
 mistigri.prrcess("({{^test}}*{{.}}+{{/test}})", {test: ""}, {}, test("(*N/A+)"));
@@ -58,3 +65,9 @@ mistigri.prrcess("({{>middle}})", {test: "xyz"}, {reader: mistigri.feed({middle:
 mistigri.prrcess("({{>middle test='xyz'}},{{>middle test='abc'}})", {}, {reader: mistigri.feed({middle: "{{test}}"})}, test("(xyz,abc)"));
 mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test='abc'}}{{/test}})", {test: 103}, {reader: mistigri.feed({middle: "{{test}}"})}, test("(xyz,abc)"));
 mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test=$item}}{{/test}})", {test: 103}, {reader: mistigri.feed({middle: "{{test}}"})}, test("(xyz,103)"));
+
+mistigri.prrcess("({{#let a=103}}{{a}}{{/let}})", {let: function(args) {return args}}, {}, test("(103)"));
+mistigri.prrcess("({{#inject}}{{>middle model=model}}{{/inject}})", {inject: function(o) {return {model: o.$model}}, test: 103}, {reader: mistigri.feed({middle: "{{model.test}}"})}, test("(103)"));
+
+mistigri.prrcess("({{>first}})", {}, {reader: mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}, test("(+xyz*xyz)"));
+mistigri.prrcess("({{>second render='no'}}{{>first}})", {}, {reader: mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}, test("(+xyz*xyz)"));
