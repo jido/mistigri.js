@@ -80,3 +80,9 @@ mistigri.prrcess("({{>first}})", {}, {reader:
     mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}, test("(+xyz*xyz)"));
 mistigri.prrcess("({{>second render='no'}}{{>first}})", {}, {reader: 
     mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}, test("(+xyz*xyz)"));
+
+mistigri.prrcess("({{test.shift}}{{test.shift}}{{test.shift}})", {test: ["x", "y", "z"]}, {methodCall: true}, test("(xyz)"));
+mistigri.prrcess("({{>rec test=test}})", {test: ["x", "y", "z"]}, {methodCall: true, reader:
+    mistigri.feed({rec: "{{test.shift}}{{#test}}/{{>rec test= test}}{{/test}}"})}, test("(x/y/z)"));
+mistigri.prrcess("({{> all }})", {}, {reader:
+    mistigri.feed({all: "{{>first}}, {{>second}}", first: "-{{>third}}-", second: "*{{>third}}*", third: "y"})}, test("(-y-, *y*)"))
