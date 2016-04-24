@@ -88,7 +88,7 @@ var render = function render(parts, model, config, includes) {
         var part = parts[partnum];
         var mitext = splitAt(close_brace, part);
         var mistigri = mitext[0];
-        var text = mitext[1]
+        var text = (mitext.length > 1) ? mitext[1] : "";
         if (!in_block)
         {
             args = {$position: position, $template: parts, $model: model, $placeholder: default_text}; 
@@ -373,7 +373,8 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
             return value; // add to output
         }
     }
-    var is_empty = !value;
+    var is_empty_array = Array.isArray(value) && value.length === 0;
+    var is_empty = !value || is_empty_array;
     if ((is_empty && invert) || (!is_empty && !invert))
     {
         var suffix = ('suffix' in args) ? args.suffix : "";
@@ -390,9 +391,9 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         }
 
         var list = value;
-        if (!Array.isArray(value))
+        if (is_empty || !Array.isArray(value))
         {
-            list = [value];
+            list = [is_empty_array? null : value];
         }
         var offset = includes.offset;
         var total = invert ? 0 : list.length;
