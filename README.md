@@ -1,5 +1,10 @@
 # mistigri.js
-JavaScript template engine inspired by Mustache
+JavaScript template engine inspired by Mustache.
+
+It could be called an antinome of Handlebars, extending Mustache 
+without the addition of new keywords.
+The main new concept is that of arguments.
+
 
 Supported features
 -------
