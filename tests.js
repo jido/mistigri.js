@@ -68,7 +68,7 @@ mistigri.prrcess("({{>middle test='xyz'}})", {}, {reader:
     mistigri.feed({middle: "{{&test}}"})}, test("(xyz)"));
 mistigri.prrcess("({{>middle}})", {test: "xyz"}, {reader: 
     mistigri.feed({middle: "{{&test}}"})}, test("(N/A)"));
-mistigri.prrcess("({{>middle test='xyz'}},{{>middle test='abc'}})", options, {reader: 
+mistigri.prrcess("({{>middle test='xyz'}},{{>middle test='abc'}})", {}, {reader: 
     mistigri.feed({middle: "{{&test}}"})}, test("(xyz,abc)"));
 mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test='abc'}}{{/test}})", {test: 103}, {reader: 
     mistigri.feed({middle: "{{&test}}"})}, test("(xyz,abc)"));
