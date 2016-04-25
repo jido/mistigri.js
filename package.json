@@ -2,7 +2,7 @@
   "name": "mistigri",
   "version": "1.0.0",
   "description": "A simple template engine inspired by Mustache",
-  "main": "index.js",
+  "main": "mistigri.js",
   "scripts": {
     "test": "node tests.js"
   },
@@ -21,7 +21,7 @@
     "small",
     "powerful"
   ],
-  "author": "Denis Bredelet",
+  "author": "Denis Bredelet <denisjob@bredelet.com>",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/jido/mistigri.js/issues"
