@@ -2,9 +2,9 @@
   "name": "mistigri",
   "version": "1.0.0",
   "description": "A simple template engine inspired by Mustache",
-  "main": "mistigri.js",
+  "main": "index.js",
   "scripts": {
-    "test": "mistigri.prrcess(\"Hello {{you}}!\", {you: \"world\"})"
+    "test": "node tests.js"
   },
   "repository": {
     "type": "git",
