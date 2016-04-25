@@ -455,3 +455,5 @@ var getOption = function getOption(name, defaultValue, config) {
 
 return {prrcess: main, process:main, feed: feed}; // note: prrcess gives cooler results, I swear. 
 })();
+
+if (module !== undefined) module.exports = mistigri;
