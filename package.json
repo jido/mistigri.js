@@ -1,0 +1,30 @@
+{
+  "name": "mistigri",
+  "version": "1.0.0",
+  "description": "A simple template engine inspired by Mustache",
+  "main": "mistigri.js",
+  "scripts": {
+    "test": "mistigri.prrcess(\"Hello {{you}}!\", {you: \"world\"})"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jido/mistigri.js.git"
+  },
+  "keywords": [
+    "template",
+    "engine",
+    "mailing",
+    "html",
+    "easy",
+    "simple",
+    "fast",
+    "small",
+    "powerful"
+  ],
+  "author": "Denis Bredelet",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jido/mistigri.js/issues"
+  },
+  "homepage": "https://github.com/jido/mistigri.js#readme"
+}
