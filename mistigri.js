@@ -49,8 +49,17 @@ var DEFAULT_READER = function ajaxReader(url) {
     });
 }
 
+var options = {
+    openBrace: DEFAULT_OPEN_BRACE,
+    closeBrace: DEFAULT_CLOSE_BRACE,
+    placeholder: DEFAULT_PLACEHOLDER,
+    methodCall: DEFAULT_METHOD_CALL,
+    escapeFunction: DEFAULT_ESCAPE_FUNCTION,
+    reader: DEFAULT_READER
+};
+
 var main = function prrcess(template, model, config) {
-    open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
+    open_brace = getOption('openBrace', config);
     var includes = {work: [], offset: 0, cache: {}};
     var rendered = render(template.split(open_brace), model, config, includes);
     var result = new Promise(function purr(grant, deny) {
@@ -78,11 +87,11 @@ var feed = function feed(templates) {
 }
 
 var render = function render(parts, model, config, includes) {
-    var open_brace_len = getOption('openBrace', DEFAULT_OPEN_BRACE, config).length;
-    var close_brace = getOption('closeBrace', DEFAULT_CLOSE_BRACE, config);
-    var default_text = getOption('placeholder', DEFAULT_PLACEHOLDER, config);
-    var default_escape = getOption('escapeFunction', DEFAULT_ESCAPE_FUNCTION, config);
-    var bind = getOption('methodCall', DEFAULT_METHOD_CALL, config);
+    var open_brace_len = getOption('openBrace', config).length;
+    var close_brace = getOption('closeBrace', config);
+    var default_text = getOption('placeholder', config);
+    var default_escape = getOption('escapeFunction', config);
+    var bind = getOption('methodCall', config);
     var rendered = parts[0];
     var position = rendered.length;
     var offset = includes.offset;
@@ -207,7 +216,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     parts[0] = content;
     args.$invertBlock = invert;
     args.$template = parts;
-    var bind = getOption('methodCall', DEFAULT_METHOD_CALL, config);
+    var bind = getOption('methodCall', config);
     var value = valueFor(action, args.$model, bind);
     while (typeof value === 'function')
     {
@@ -216,7 +225,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         } catch(error) {
             console.error("Mistigri caught an error from " + action + " or one of its offsprings");
             console.error(error.stack);
-            value = getOption('placeholder', DEFAULT_PLACEHOLDER, config);
+            value = getOption('placeholder', config);
         }
         if (typeof value === 'string')
         {
@@ -306,8 +315,8 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
         finish(rendered);
         return;
     }
-    var open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
-    var reader = getOption('reader', DEFAULT_READER, config);
+    var open_brace = getOption('openBrace', config);
+    var reader = getOption('reader', config);
     var include = includes.work.shift();
     var position = include.at + rendered.length - size;   // position from end
 
@@ -475,11 +484,11 @@ var splitAt = function splitAt(pattern, text) {
     }
 }
 
-var getOption = function getOption(name, defaultValue, config) {
-    return (config && name in config) ? config[name] : defaultValue;
+var getOption = function getOption(name, config) {
+    return (config && name in config) ? config[name] : options[name];
 }
 
-return {prrcess: main, process:main, feed: feed}; // note: prrcess gives cooler results, I swear. 
+return {prrcess: main, process:main, feed: feed, options: options}; // note: prrcess gives cooler results, I swear. 
 })();
 
 if (module !== undefined) module.exports = mistigri;
