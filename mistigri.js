@@ -25,47 +25,55 @@ var DEFAULT_ESCAPE_FUNCTION = function escapeHtml(html) {
     div.appendChild(text);
     return div.innerHTML;
 }
-var DEFAULT_READER = function ajaxReader(url, success, error) {
-    var request = new XMLHttpRequest();
-    request.open("GET", url, true);
-    request.onreadystatechange = function(event) {
-        if (this.readyState === 4)
-        {
-            if (this.status === 200)
+var DEFAULT_READER = function ajaxReader(url) {
+    return new Promise(function read(fullfill, reject) {
+        var request = new XMLHttpRequest();
+        request.open("GET", url, true);
+        request.onreadystatechange = function(event) {
+            if (this.readyState === 4)
             {
-                success(this.responseText);
-            }
-            else
-            {
-                var miError = new Error("Mistigri ajaxReader error reading: " + url);
-                miError.ajaxState = this.readyState;
-                miError.httpStatus = this.status;
-                miError.httpResponse = this.statusText;
-                error(miError);
+                if (this.status === 200)
+                {
+                    fullfill(this.responseText);
+                }
+                else
+                {
+                    var miError = new Error("Mistigri ajaxReader error reading: " + url);
+                    miError.httpStatus = this.status;
+                    miError.httpResponse = this.statusText;
+                    reject(miError);
+                }
             }
         }
-    }
-    request.send();
+        request.send();
+    });
 }
 
-var main = function prrcess(template, model, config, finish) {
+var main = function prrcess(template, model, config) {
     open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
     var includes = {work: [], offset: 0, cache: {}};
     var rendered = render(template.split(open_brace), model, config, includes);
-    handleAllIncludes(includes, config, rendered, rendered.length, finish);
-    return rendered;
+    var result = new Promise(function purr(grant, deny) {
+        handleAllIncludes(includes, config, rendered, rendered.length, grant);
+    });
+    result.toString = function toString() {
+        return rendered;
+    }
+    return result;
 }
 
 var feed = function feed(templates) {
-    return function readFromObject(path, success, error) {
-        if (path in templates)
-        {
-            success(templates[path]);
-        }
-        else
-        {
-            error(new Error("Mistigri was not fed template: " + path));
-        }
+    return function readFromObject(path) {
+        return new Promise(function share(grant, deny) {
+            if (path in templates)
+            {
+                grant(templates[path]);
+            }
+            else
+            {
+                deny(new Error("Mistigri was not fed template: " + path));
+            }
+        });
     }
 }
 
@@ -277,12 +285,7 @@ var handleInclude = function handleInclude(action, args, config, includes) {
 var handleAllIncludes = function handleAllIncludes(includes, config, rendered, size, finish) {
     if (includes.work.length === 0)
     {
-        if (finish !== undefined) finish(rendered);
-        return;
-    }
-    if (finish === undefined)
-    {
-        console.warn("Mistigri needs a callback - ignoring all includes");
+        finish(rendered);
         return;
     }
     var open_brace = getOption('openBrace', DEFAULT_OPEN_BRACE, config);
@@ -290,7 +293,7 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
     var include = includes.work.shift();
     var position = include.at + rendered.length - size;   // position from end
 
-    reader(include.path, function(content) {
+    reader(include.path).then(function(content) {
         var template = content.split(open_brace);
         includes.cache[include.path] = template;
 
