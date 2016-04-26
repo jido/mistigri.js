@@ -160,13 +160,13 @@ Configuration options
   
   For security reasons the default is _false_.
 
-  __reader__ : _function(string, function(string), function(Error))_
+  __reader__ : _function(string) &#x2192; Promise of string_
   
-  A function that reads a template and passes it to the first callback
-  when it is ready. The second callback can be used in case of error.
+  A function that reads a template and returns it wrapped in a
+  promise.
   
   The default is a function that does an Ajax request when provided
-  an URI.
+  an URI (requires DOM).
   
   There is also a reader generator to use for testing purposes which
   returns a reader when fed an object containing templates. This is
@@ -176,8 +176,7 @@ Configuration options
 mistigri.process(
   "Mistigri {{>include}}", 
   {}, 
-  {reader: mistigri.feed({include: "catface Σ:{"})},
-  alert
+  {reader: mistigri.feed({include: "catface Σ:{"})}
 );
 ~~~
 
