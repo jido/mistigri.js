@@ -1,6 +1,6 @@
 {
   "name": "mistigri",
-  "version": "1.0.1_01",
+  "version": "1.0.101",
   "description": "A simple template engine inspired by Mustache",
   "main": "mistigri.js",
   "scripts": {
