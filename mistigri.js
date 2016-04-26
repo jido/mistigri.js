@@ -144,7 +144,13 @@ var render = function render(parts, model, config, includes) {
             default:
                 if (in_block > 0) break;
                 action = parseAction(mistigri, args, bind);
-                rendered += default_escape(handleValue(action, args, bind));
+                try {
+                    rendered += default_escape(handleValue(action, args, bind));
+                } catch(error) {
+                    console.error("Mistigri encountered an error while escaping " + action);
+                    console.error(error.stack);
+                    rendered += default_text;
+                }
         }
         if (in_block <= 0)
         {
@@ -172,15 +178,21 @@ var handleValue = function handleValue(action, args, bind) {
             result = value ? args.yes : args.no;
             break;
         case 'function':
-            result = value(args);
-            while (typeof result === 'function')
-            {
-                result = result(args);
+            try {
+                result = value(args);
+                while (typeof result === 'function')
+                {
+                    result = result(args);
+                }
+            } catch(error) {
+                console.error("Mistigri called " + action + " and received an error");
+                console.error(error.stack);
+                result = null;
             }
             break;
         default:
             // Not sure what to do
-            return value;
+            return String(value);
     }
     if (result === undefined || result === null)
     {
@@ -195,11 +207,17 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     parts[0] = content;
     args.$invertBlock = invert;
     args.$template = parts;
-    var bind = (config && 'methodCall' in config) ? config.methodCall : DEFAULT_METHOD_CALL;
+    var bind = getOption('methodCall', DEFAULT_METHOD_CALL, config);
     var value = valueFor(action, args.$model, bind);
     while (typeof value === 'function')
     {
-        value = value(args);
+        try {
+            value = value(args);
+        } catch(error) {
+            console.error("Mistigri caught an error from " + action + " or one of its offsprings");
+            console.error(error.stack);
+            value = getOption('placeholder', DEFAULT_PLACEHOLDER, config);
+        }
         if (typeof value === 'string')
         {
             return value; // add to output
@@ -293,24 +311,29 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
     var include = includes.work.shift();
     var position = include.at + rendered.length - size;   // position from end
 
-    reader(include.path).then(function(content) {
-        var template = content.split(open_brace);
-        includes.cache[include.path] = template;
-
-        var new_includes = {work: [], offset: position, cache: includes.cache};
-        if (include.render)
-        {
-            var inserted = render(template, include.model, config, new_includes);
-            rendered = rendered.substr(0, position) + inserted + rendered.substr(position);
-        }
-        handleAllIncludes(new_includes, config, rendered, rendered.length, function(new_rendered) {
-            handleAllIncludes(includes, config, new_rendered, size, finish);
+    try {
+        reader(include.path).then(function(content) {
+            var template = content.split(open_brace);
+            includes.cache[include.path] = template;
+    
+            var new_includes = {work: [], offset: position, cache: includes.cache};
+            if (include.render)
+            {
+                var inserted = render(template, include.model, config, new_includes);
+                rendered = rendered.substr(0, position) + inserted + rendered.substr(position);
+            }
+            handleAllIncludes(new_includes, config, rendered, rendered.length, function(new_rendered) {
+                handleAllIncludes(includes, config, new_rendered, size, finish);
+            });
+        },
+        function(error) {
+            console.error(error.stack);
+            handleAllIncludes(includes, config, rendered, size, finish);
         });
-    },
-    function(error) {
-        console.error(error);
-        handleAllIncludes(includes, config, rendered, size, finish);
-    });
+    } catch(error) {
+        console.error("Bad luck! Mistigri frowns at the reader function that threw this error");
+        console.error(error.stack);
+    }
 }
 
 var parseAction = function parseAction(tag, args, bind) {
@@ -369,7 +392,7 @@ var getArgs = function getArgs(text, args, bind) {
                 var arg;
                 if (/^[-+0-9]/.test(value))
                 {
-                    arg = parseFloat(value);
+                    arg = parseFloat(value);    // doesn't throw
                 }
                 else if (/^'[^]*'$/.test(value) || /^"[^]*"$/.test(value))
                 {

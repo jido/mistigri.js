@@ -50,9 +50,7 @@ mistigri.prrcess("({{test x=1\\03}})", {test: function(o) {return o.x}}, options
 
 mistigri.prrcess("({{#test}}*{{.}}+{{/test}})", {test: "xyz"}, options).then(test("(*xyz+)"));
 mistigri.prrcess("({{^test}}*{{.}}+{{/test}})", {test: []}, options).then(test("(*N/A+)"));
-try {
-    mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, options).then(test("Should fail"));
-} catch (e) {test("Method Number.prototype.toExponential called on incompatible receiver undefined")(e.message)}
+mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, options).then(test("(N/A)"));
 mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, {methodCall: true}).then(test("(1e+2)"));
 mistigri.prrcess("({{&test.trim}})", {test: " xyz "}, {methodCall: true}).then(test("(xyz)"));
 
@@ -60,7 +58,7 @@ mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {retu
 mistigri.prrcess("({{test1}}`{{test2}})", {test2: "xy", test1: function(o) {return "z"}}, options).then(test("(z`xy)"));
 mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return true}}, options).then(test("(xy`true)"));
 
-mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return function(p) {return "z"}}}, options).then(test("(xy`z)"));
+mistigri.prrcess("(xy`{{test}})", {test: function(o) {return function(p) {return "z"}}}, options).then(test("(xy`z)"));
 
 mistigri.prrcess("{{>start}}{{&test}}{{>end}}", {test: "xyz"}, {reader: 
     mistigri.feed({start: "(", end: ")"})}).then(test("(xyz)"));
