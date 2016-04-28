@@ -58,13 +58,44 @@ var options = {
     reader: DEFAULT_READER
 };
 
-var main = function prrcess(template, model, config) {
-    open_brace = getOption('openBrace', config);
-    var includes = {work: [], offset: 0, cache: {}};
-    var rendered = render(template.split(open_brace), model, config, includes);
-    var result = new Promise(function purr(grant, deny) {
-        handleAllIncludes(includes, config, rendered, rendered.length, grant);
-    });
+var main = function prrcess(text, model, config) {
+    var template = null;
+    var open_brace = getOption('openBrace', config);
+    switch (typeof template) {
+        case 'string':
+            template = text.split(open_brace);
+            break;
+        case 'object':
+            template = (text === null || Array.isArray(text)) ? text : String(text).split(open_brace);
+            break;
+    }
+    var result;
+    var rendered;
+    if (template === null)
+    {
+        console.error("Mistigri doesn't understand this template type: '" + typeof text + "'");
+        result = new Promise(function hiss(grant, deny) {
+            var error = new Error("Unknown template type " + typeof text);
+            if (deny !== undefined)
+            {
+                deny(error);
+            }
+            else
+            {
+                throw error;   // this will never be reached with a real Promise
+            }
+        });
+        rendered = "error";
+    }
+    else
+    {
+        model = (model === undefined) ? {} : model;
+        var includes = {work: [], offset: 0, cache: {}};
+        rendered = render(template, model, config, includes);
+        result = new Promise(function purr(grant, deny) {
+            handleAllIncludes(includes, config, rendered, rendered.length, grant);
+        });
+    }
     result.toString = function toString() {
         return rendered;
     }
