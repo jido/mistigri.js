@@ -265,6 +265,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         else if (value instanceof Promise)
         {
             includes.work.push({deferred: value, at: includes.offset, path: null, model: null, render: true});
+            return "";
         }
     }
     var is_empty_array = Array.isArray(value) && value.length === 0;
