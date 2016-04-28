@@ -262,6 +262,10 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         {
             return value; // add to output
         }
+        else if (value instanceof Promise)
+        {
+            includes.work.push({deferred: value, at: includes.offset, path: null, model: null, render: true});
+        }
     }
     var is_empty_array = Array.isArray(value) && value.length === 0;
     var is_empty = !value || is_empty_array;
@@ -336,7 +340,8 @@ var handleInclude = function handleInclude(action, args, config, includes) {
         return render(includes.cache[path], args, config, includes);
     }
     var preload = ('render' in args && args.render === "no");
-    includes.work.push({path: path, at: includes.offset, model: args, render: !preload});
+    var read = getOption('reader', config);
+    includes.work.push({deferred: read(path), at: includes.offset, path: path, model: args, render: !preload});
     return "";  // Rendered output will be inserted later
 }
 
@@ -347,19 +352,21 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
         return;
     }
     var open_brace = getOption('openBrace', config);
-    var reader = getOption('reader', config);
     var include = includes.work.shift();
     var position = include.at + rendered.length - size;   // position from end
 
     try {
-        reader(include.path).then(function(content) {
-            var template = content.split(open_brace);
-            includes.cache[include.path] = template;
-    
+        include.deferred.then(function(content) {
+            var ready_text = (include.path === null);   // content is text promised by a block function
+            if (!ready_text)
+            {
+                var template = content.split(open_brace);
+                includes.cache[include.path] = template;
+            }
             var new_includes = {work: [], offset: position, cache: includes.cache};
             if (include.render)
             {
-                var inserted = render(template, include.model, config, new_includes);
+                var inserted = ready_text ? content : render(template, include.model, config, new_includes);
                 rendered = rendered.substr(0, position) + inserted + rendered.substr(position);
             }
             handleAllIncludes(new_includes, config, rendered, rendered.length, function(new_rendered) {
@@ -371,7 +378,7 @@ var handleAllIncludes = function handleAllIncludes(includes, config, rendered, s
             handleAllIncludes(includes, config, rendered, size, finish);
         });
     } catch(error) {
-        console.error("Bad luck! Mistigri frowns at the reader function that threw this error");
+        console.error("Bad luck! Mistigri frowns at the function that threw this error");
         console.error(error.stack);
     }
 }
