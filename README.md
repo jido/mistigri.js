@@ -18,7 +18,7 @@ Supported features
   When the value is null or undefined the default value is inserted. 
   If none is specified then a generic placeholder text is inserted.
   
-  Nested values are allowed, for example "person.name".
+  Nested values are allowed, for example "person\.name".
   
   If the name is associated with a function then this function is
   called to provide a value. See also Configuration Options.
@@ -176,7 +176,7 @@ Configuration options
 mistigri.process(
   "Mistigri {{>include}}", 
   {}, 
-  {reader: mistigri.feed({include: "catface Σ:{"})}
+  {reader: mistigri.feed({include: "catface &#931;:{"})}
 );
 ~~~
 
