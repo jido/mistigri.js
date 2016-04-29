@@ -1,6 +1,6 @@
 {
   "name": "mistigri",
-  "version": "1.0.104",
+  "version": "1.0.105",
   "description": "A simple template engine inspired by Mustache",
   "main": "mistigri.js",
   "scripts": {
@@ -18,8 +18,13 @@
     "easy",
     "simple",
     "fast",
+    "speed",
+    "quick",
     "small",
-    "powerful"
+    "powerful",
+    "mustache",
+    "handlebars",
+    "like"
   ],
   "author": "Denis Bredelet <denisjob@bredelet.com>",
   "license": "MIT",
