@@ -222,6 +222,10 @@ Special names added to the model
 Special arguments passed to all functions
 ---
 
+  __$action__ : _string_
+  
+  The name of the function as written in the template.
+
   __$position__ : _number_
   
   Indicates the position of the Mistigri tag in the template.

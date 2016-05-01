@@ -388,6 +388,7 @@ var parseAction = function parseAction(tag, args, bind) {
     var parts = /^\s*(\S+)\s*([^]*)/.exec(tag);
     if (parts === null) return "";
     var action = parts[1];
+    args.$action = action;
     if (parts[2].length > 0)
     {
         getArgs(parts[2], args, bind);
