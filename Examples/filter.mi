@@ -1,0 +1,9 @@
+{{CAPS text="Mistigri"}} is a {{CAPS text="quite friendly"}} template engine.
+
+Its mascot is the catface Σ:{
+
+{{#CAPS}}Look at the magnificent uppercase it produces!{{/CAPS}}
+
+This was done using a filter.
+
+
