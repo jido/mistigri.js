@@ -26,7 +26,7 @@ var DEFAULT_ESCAPE_FUNCTION = function escapeHtml(html) {
     return div.innerHTML;
 }
 var DEFAULT_READER = function ajaxReader(url) {
-    return new Promise(function read(fullfill, reject) {
+    return new Promise(function read(fulfill, reject) {
         var request = new XMLHttpRequest();
         request.open("GET", url, true);
         request.onreadystatechange = function(event) {
@@ -34,7 +34,7 @@ var DEFAULT_READER = function ajaxReader(url) {
             {
                 if (this.status === 200)
                 {
-                    fullfill(this.responseText);
+                    fulfill(this.responseText);
                 }
                 else
                 {

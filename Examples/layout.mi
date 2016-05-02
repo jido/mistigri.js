@@ -1,0 +1,15 @@
+*************
+ {{>header}}
+*************
+[ {{>navigation homeTab = homeTab bioTab = bioTab contactTab = contactTab}} ]
+|
+|
+| {{>middle middle = body}}
+|
+|
+=============
+ {{>footer}}
+=============
+
+
+
