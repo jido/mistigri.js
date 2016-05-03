@@ -1,6 +1,8 @@
 var mistigri = require("../mistigri.js");
 var fs = require("fs");
 
+// Some generic setup
+
 mistigri.options.escapeFunction = String;
 
 function readFile(name, options) {
@@ -13,12 +15,14 @@ function readFile(name, options) {
     });
 }
 
+// This is the filter function
+
 function uppercaseFilter(args) {
     var toUpper = function toUpper(text) {
         return text.toLocaleUpperCase();
     }
     
-    if ('$invertBlock' in args)
+    if ('$invertBlock' in args) // we are inside a block
     {
         return mistigri.prrcess(args.$template, args.$model).then(toUpper);
     }
@@ -27,6 +31,8 @@ function uppercaseFilter(args) {
         return toUpper(args.text);
     }
 }
+
+// Render the template using the filter
 
 readFile("filter.mi").then(function(template) {
     return mistigri.prrcess(template, {
