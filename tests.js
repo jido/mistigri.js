@@ -2,91 +2,99 @@ var mistigri = require("./mistigri.js");
 mistigri.options.escapeFunction = String;
 
 var id = 1;
-function test(expected) {
-    return function(out) {
-        if (out === expected)
-        {
-            console.log(id + " - " + out + ": PASS");
+function test(run, expected) {
+    var end_test = function end_test(id) {
+        return function(out) {
+            if (out === expected)
+            {
+                console.log(id + " - " + out + ": PASS");
+            }
+            else if (!out && expected !== "")
+            {
+                console.warn(id + " - " + out + ": NO OUTPUT\nExpected - " + expected);
+            }
+            else
+            {
+                console.error(id + " - " + out + ": FAIL\nExpected - " + expected);
+            }
         }
-        else if (!out && expected !== "")
-        {
-            console.warn(id + " - " + out + ": NO OUTPUT\nExpected - " + expected);
-        }
-        else
-        {
-            console.error(id + " - " + out + ": FAIL\nExpected - " + expected);
-        }
-        ++id;
     }
+    run.then(end_test(id));
+    ++id;
 }
 
-mistigri.prrcess("({{test}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("({{tests}})", {test: "xyz"}).then(test("(N/A)"));
-mistigri.prrcess("({{test}})", {test: -103}).then(test("(-103)"));
-mistigri.prrcess("({{test yes='T'}})", {test: true}).then(test("(T)"));
-mistigri.prrcess("({{test no='F'}})", {test: false}).then(test("(F)"));
-mistigri.prrcess("({{test}})", {test: {toString: function() {return this.x}, x: "O"}}).then(test("(O)"));
-mistigri.prrcess("({{test.x}})", {test: {x: "O"}}).then(test("(O)"));
-mistigri.prrcess("({{test.z}})", {test: {x: "O"}}).then(test("(N/A)"));
-mistigri.prrcess("({{#test}}{{x}}{{/test}})", {test: {x: "O"}}).then(test("(O)"));
+test(mistigri.prrcess("({{test}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("({{tests}})", {test: "xyz"}), "(N/A)");
+test(mistigri.prrcess("({{test}})", {test: -103}), "(-103)");
+test(mistigri.prrcess("({{test yes='T'}})", {test: true}), "(T)");
+test(mistigri.prrcess("({{test no='F'}})", {test: false}), "(F)");
+test(mistigri.prrcess("({{test}})", {test: {toString: function() {return this.x}, x: "O"}}), "(O)");
+test(mistigri.prrcess("({{test.x}})", {test: {x: "O"}}), "(O)");
+test(mistigri.prrcess("({{test.z}})", {test: {x: "O"}}), "(N/A)");
+test(mistigri.prrcess("({{#test}}{{x}}{{/test}})", {test: {x: "O"}}), "(O)");
 
-mistigri.prrcess("({{ \ntest}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("({{  test\t \n}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("({{test{{x}}}})", {test: "xyz"}).then(test("(xyzN/A}})"));
-mistigri.prrcess("({{test{{x}})", {test: "xyz"}).then(test("(xyzN/A)"));
-mistigri.prrcess("({{x{{test}})", {test: "xyz"}).then(test("(N/Axyz)"));
-mistigri.prrcess("(,&testm)", {test: "xyz"}, {openBrace: ",", closeBrace: "m"}).then(test("(xyz)"));
-mistigri.prrcess("(,&tests)", {test: "xyz"}, {openBrace: ",", closeBrace: "s"}).then(test("(N/Ats)"));
-mistigri.prrcess("({{test 103}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("({{test x=103}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("({{test x=103=15}})", {test: "xyz"}).then(test("(xyz)"));
-mistigri.prrcess("(*{{test}}|+{{test}})", {test: "xyz"}).then(test("(*xyz|+xyz)"));
+test(mistigri.prrcess("({{ \ntest}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("({{  test\t \n}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("({{test{{x}}}})", {test: "xyz"}), "(xyzN/A}})");
+test(mistigri.prrcess("({{test{{x}})", {test: "xyz"}), "(xyzN/A)");
+test(mistigri.prrcess("({{x{{test}})", {test: "xyz"}), "(N/Axyz)");
+test(mistigri.prrcess("(,&testm)", {test: "xyz"}, {openBrace: ",", closeBrace: "m"}), "(xyz)");
+test(mistigri.prrcess("(,&tests)", {test: "xyz"}, {openBrace: ",", closeBrace: "s"}), "(N/Ats)");
+test(mistigri.prrcess("({{test 103}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("({{test x=103}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("({{test x=103=15}})", {test: "xyz"}), "(xyz)");
+test(mistigri.prrcess("(*{{test}}|+{{test}})", {test: "xyz"}), "(*xyz|+xyz)");
 
-mistigri.prrcess("({{test x=103}})", {test: function(o) {return o.x + 1}}).then(test("(104)"));
-mistigri.prrcess("({{test x=+1.0e2}})", {test: function(o) {return o.x + 1}}).then(test("(101)"));
-mistigri.prrcess("({{test x=103 y =1}})", {test: function(o) {return o.x + o.y}}).then(test("(104)"));
-mistigri.prrcess("({{test \\x=103}})", {test: function(o) {return o["\\1"]}}).then(test("(103)"));
-mistigri.prrcess("({{test x=1\\03}})", {test: function(o) {return o.x}}).then(test("(1)"));
+test(mistigri.prrcess("({{test x=103}})", {test: function(o) {return o.x + 1}}), "(104)");
+test(mistigri.prrcess("({{test x=+1.0e2}})", {test: function(o) {return o.x + 1}}), "(101)");
+test(mistigri.prrcess("({{test x=103 y =1}})", {test: function(o) {return o.x + o.y}}), "(104)");
+test(mistigri.prrcess("({{test \\x=103}})", {test: function(o) {return o["\\1"]}}), "(103)");
+test(mistigri.prrcess("({{test x=1\\03}})", {test: function(o) {return o.x}}), "(1)");
 
-mistigri.prrcess("({{#test}}*{{.}}+{{/test}})", {test: "xyz"}).then(test("(*xyz+)"));
-mistigri.prrcess("({{^test}}*{{.}}+{{/test}})", {test: []}).then(test("(*N/A+)"));
-mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}).then(test("(N/A)"));
-mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, {methodCall: true}).then(test("(1e+2)"));
-mistigri.prrcess("({{&test.trim}})", {test: " xyz "}, {methodCall: true}).then(test("(xyz)"));
+test(mistigri.prrcess("({{#test}}*{{.}}+{{/test}})", {test: "xyz"}), "(*xyz+)");
+test(mistigri.prrcess("({{^test}}*{{.}}+{{/test}})", {test: []}), "(*N/A+)");
+test(mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}), "(N/A)");
+test(mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, {methodCall: true}), "(1e+2)");
+test(mistigri.prrcess("({{&test.trim}})", {test: " xyz "}, {methodCall: true}), "(xyz)");
 
-mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return "z"}}).then(test("(xy`z)"));
-mistigri.prrcess("({{test1}}`{{test2}})", {test2: "xy", test1: function(o) {return "z"}}).then(test("(z`xy)"));
-mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return true}}).then(test("(xy`true)"));
+test(mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return "z"}}), "(xy`z)");
+test(mistigri.prrcess("({{test1}}`{{test2}})", {test2: "xy", test1: function(o) {return "z"}}), "(z`xy)");
+test(mistigri.prrcess("({{test1}}`{{test2}})", {test1: "xy", test2: function(o) {return true}}), "(xy`true)");
 
-mistigri.prrcess("(xy`{{test}})", {test: function(o) {return function(p) {return "z"}}}).then(test("(xy`z)"));
+test(mistigri.prrcess("(xy`{{test}})", {test: function(o) {return function(p) {return "z"}}}), "(xy`z)");
 
-mistigri.prrcess("{{>start}}{{&test}}{{>end}}", {test: "xyz"}, {reader: 
-    mistigri.feed({start: "(", end: ")"})}).then(test("(xyz)"));
-mistigri.prrcess("({{>middle test='xyz'}})", {}, {reader: 
-    mistigri.feed({middle: "{{&test}}"})}).then(test("(xyz)"));
-mistigri.prrcess("({{>middle}})", {test: "xyz"}, {reader: 
-    mistigri.feed({middle: "{{&test}}"})}).then(test("(N/A)"));
-mistigri.prrcess("({{>middle test='xyz'}},{{>middle test='abc'}})", {}, {reader: 
-    mistigri.feed({middle: "{{&test}}"})}).then(test("(xyz,abc)"));
-mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test='abc'}}{{/test}})", {test: 103}, {reader: 
-    mistigri.feed({middle: "{{&test}}"})}).then(test("(xyz,abc)"));
-mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test=$item}}{{/test}})", {test: 103}, {reader: 
-    mistigri.feed({middle: "{{&test}}"})}).then(test("(xyz,103)"));
+test(mistigri.prrcess("{{>start}}{{&test}}{{>end}}", {test: "xyz"}, {reader: 
+    mistigri.feed({start: "(", end: ")"})}), "(xyz)");
+test(mistigri.prrcess("({{>middle test='xyz'}})", {}, {reader: 
+    mistigri.feed({middle: "{{&test}}"})}), "(xyz)");
+test(mistigri.prrcess("({{>middle}})", {test: "xyz"}, {reader: 
+    mistigri.feed({middle: "{{&test}}"})}), "(N/A)");
+test(mistigri.prrcess("({{>middle test='xyz'}},{{>middle test='abc'}})", {}, {reader: 
+    mistigri.feed({middle: "{{&test}}"})}), "(xyz,abc)");
+test(mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test='abc'}}{{/test}})", {test: 103}, {reader: 
+    mistigri.feed({middle: "{{&test}}"})}), "(xyz,abc)");
+test(mistigri.prrcess("({{>middle test='xyz'}}{{#test}},{{>middle test=$item}}{{/test}})", {test: 103}, {reader: 
+    mistigri.feed({middle: "{{&test}}"})}), "(xyz,103)");
 
-mistigri.prrcess("({{#let a=103}}{{a}}{{/let}})", {let: function(args) {return args}}).then(test("(103)"));
-mistigri.prrcess("({{#inject}}{{>middle model=model}}{{/inject}})", {inject: function(o) {return {model: o.$model}}, test: 103}, {reader:
-    mistigri.feed({middle: "{{&model.test}}"})}).then(test("(103)"));
+test(mistigri.prrcess("({{#let a=103}}{{a}}{{/let}})", {let: function(args) {return args}}), "(103)");
+test(mistigri.prrcess("({{#inject}}{{>middle model=model}}{{/inject}})", {inject: function(o) {return {model: o.$model}}, test: 103}, {reader:
+    mistigri.feed({middle: "{{&model.test}}"})}), "(103)");
 
-mistigri.prrcess("({{>first}})", {}, {reader: 
-    mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}).then(test("(+xyz*xyz)"));
-mistigri.prrcess("({{>second render='no'}}{{>first}})", {}, {reader: 
-    mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}).then(test("(+xyz*xyz)"));
+test(mistigri.prrcess("({{>first}})", {}, {reader: 
+    mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}), "(+xyz*xyz)");
+test(mistigri.prrcess("({{>second render='no'}}{{>first}})", {}, {reader: 
+    mistigri.feed({first: "+{{>second}}*{{>second}}", second: "xyz"})}), "(+xyz*xyz)");
 
-mistigri.prrcess("({{&test.shift}}{{&test.shift}}{{&test.shift}})", {test: ["x", "y", "z"]}, {methodCall: true}).then(test("(xyz)"));
-mistigri.prrcess("({{>rec test=test}})", {test: ["x", "y", "z"]}, {methodCall: true, reader:
-    mistigri.feed({rec: "{{&test.shift}}{{#test}}/{{>rec test= test}}{{/test}}"})}).then(test("(x/y/z)"));
-mistigri.prrcess("({{> all }})", {}, {reader:
-    mistigri.feed({all: "{{>first}}, {{>second}}", first: "-{{>third}}-", second: "*{{>third}}*", third: "y"})}).then(test("(-y-, *y*)"))
-mistigri.process("{{here}}, {{here}}{{#here}}---{{here}}|{{.}}{{/here}}", {here: function(o) {return o.$position}}).then(test("0, 10---3|18"));
-mistigri.prrcess("({{#pr}}{{test}},{{/pr}})", {pr: function(o) 
-    {return mistigri.prrcess(o.$template, {test: "xyz"})}}).then(test("(xyz,)"));
+test(mistigri.prrcess("({{test.shift}}{{test.shift}}{{test.shift}})", {test: ["x", "y", "z"]}, {methodCall: true}), "(xyz)");
+test(mistigri.prrcess("({{>rec test=test}})", {test: ["x", "y", "z"]}, {methodCall: true, reader:
+    mistigri.feed({rec: "{{test.shift}}{{#test}}/{{>rec test= test}}{{/test}}"})}), "(x/y/z)");
+test(mistigri.prrcess("({{> all }})", {}, {reader:
+    mistigri.feed({all: "{{>first}}, {{>second}}", first: "-{{>third}}-", second: "*{{>third}}*", third: "y"})}), "(-y-, *y*)");
+test(mistigri.process("{{here}}, {{here}}{{#here}}---{{here}}|{{.}}{{/here}}", {here: function(o) {return o.$position}}), "0, 10---3|18");
+test(mistigri.prrcess("({{#pr}}{{test}},{{/pr}})", {pr: function(o) 
+    {return mistigri.prrcess(o.$template, {test: "xyz"})}}), "(xyz,)");
+
+test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner}}{{.}} @{{$item_1}},{{/inner}}){{/outer}}", {outer:["A", "B"], inner:[1, 2, 3]}),
+    "A(1 @A,2 @A,3 @A,)B(1 @B,2 @B,3 @B,)");
+test(mistigri.prrcess("<nl><li>\n<i>{{#test tag='li'}}{{.}}{{/test}}</i> letter</li>\n</nl>", {test: ["x", "y", "z"]}),
+    "<nl><li>\n<i>x</i> letter</li><li>\n<i>y</i> letter</li><li>\n<i>z</i> letter</li>\n</nl>");

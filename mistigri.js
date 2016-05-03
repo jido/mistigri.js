@@ -14,6 +14,7 @@ alert(mistigri.prrcess(template, model));
 */
 
 var mistigri = (function(){
+"use strict";
 
 var DEFAULT_OPEN_BRACE = "{{";
 var DEFAULT_CLOSE_BRACE = "}}";
