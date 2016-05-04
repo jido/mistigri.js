@@ -62,13 +62,13 @@ var options = {
 var main = function prrcess(text, model, config) {
     var template = null;
     var open_brace = getOption('openBrace', config);
-    switch (typeof template) {
-        case 'string':
-            template = text.split(open_brace);
-            break;
-        case 'object':
-            template = (text === null || Array.isArray(text)) ? text : String(text).split(open_brace);
-            break;
+    if (typeof text === 'string')
+    {
+        template = text.split(open_brace);
+    }
+    else if (text !== null && typeof text === 'object')
+    {
+        template = Array.isArray(text) ? text : String(text).split(open_brace);
     }
     var result;
     var rendered;
@@ -77,14 +77,11 @@ var main = function prrcess(text, model, config) {
         console.error("Mistigri doesn't understand this template type: '" + typeof text + "'");
         result = new Promise(function hiss(grant, deny) {
             var error = new Error("Unknown template type " + typeof text);
-            if (deny !== undefined)
-            {
-                deny(error);
-            }
-            else
+            if (deny === undefined)
             {
                 throw error;   // this will never be reached with a real Promise
             }
+            deny(error);
         });
         rendered = "error";
     }
@@ -122,7 +119,6 @@ var render = function render(parts, model, config, includes) {
     var open_brace_len = getOption('openBrace', config).length;
     var close_brace = getOption('closeBrace', config);
     var default_text = getOption('placeholder', config);
-    var default_escape = getOption('escapeFunction', config);
     var bind = getOption('methodCall', config);
     var rendered = parts[0];
     var position = rendered.length;
@@ -185,13 +181,7 @@ var render = function render(parts, model, config, includes) {
             default:
                 if (in_block > 0) break;
                 action = parseAction(mistigri, args, bind);
-                try {
-                    rendered += default_escape(handleValue(action, args, bind));
-                } catch(error) {
-                    console.error("Mistigri encountered an error while escaping " + action);
-                    console.error(error.stack);
-                    rendered += default_text;
-                }
+                rendered += escape(handleValue(action, args, bind), config);
         }
         if (in_block <= 0)
         {
@@ -219,17 +209,7 @@ var handleValue = function handleValue(action, args, bind) {
             result = value ? args.yes : args.no;
             break;
         case 'function':
-            try {
-                result = value(args);
-                while (typeof result === 'function')
-                {
-                    result = result(args);
-                }
-            } catch(error) {
-                console.error("Mistigri called " + action + " and received an error");
-                console.error(error.stack);
-                result = null;
-            }
+            result = callFilter(action, value, args);
             break;
         default:
             // Not sure what to do
@@ -250,15 +230,9 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     args.$template = parts;
     var bind = getOption('methodCall', config);
     var value = valueFor(action, args.$model, bind);
-    while (typeof value === 'function')
+    if (typeof value === 'function')
     {
-        try {
-            value = value(args);
-        } catch(error) {
-            console.error("Mistigri caught an error from " + action + " or one of its offsprings");
-            console.error(error.stack);
-            value = getOption('placeholder', config);
-        }
+        value = callFilter(action, value, args);
         if (typeof value === 'string')
         {
             return value; // add to output
@@ -298,25 +272,8 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         {
             count += 1;
             var item = list[index];
-            var submodel = args.$model;
-            submodel.$item = item;
-            submodel.$count = count;
-            submodel.$total = total;
-            if (suffix.length > 0)
-            {
-                submodel["$item" + suffix] = item;
-                submodel["$count" + suffix] = count;
-                submodel["$total" + suffix] = total;
-            }
-            if (typeof item === 'object' && item !== null)
-            {
-                submodel = Object.create(submodel);
-                for (var key in item)
-                {
-                    submodel[key + suffix] = item[key];
-                }
-            }
-            if (count > 1)
+            var submodel = prepModel(args.$model, item, count, total, suffix);
+            if (count > 1 && middle.length !== 0)
             {
                 result += middle;
             }
@@ -325,6 +282,28 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         }
     }
     return result;
+}
+
+var prepModel = function prepModel(model, item, count, total, suffix) {
+    var submodel = model;
+    submodel.$item = item;
+    submodel.$count = count;
+    submodel.$total = total;
+    if (suffix.length > 0)
+    {
+        submodel["$item" + suffix] = item;
+        submodel["$count" + suffix] = count;
+        submodel["$total" + suffix] = total;
+    }
+    if (typeof item === 'object' && item !== null)
+    {
+        submodel = Object.create(submodel);
+        for (var key in item)
+        {
+            submodel[key + suffix] = item[key];
+        }
+    }
+    return submodel;
 }
 
 var handleInclude = function handleInclude(action, args, config, includes) {
@@ -474,6 +453,21 @@ var getArgs = function getArgs(text, args, bind) {
     return !seen_sign;
 }
 
+var callFilter = function callFilter(name, action, args) {
+    try {
+        var result = action(args);
+        while (typeof result === 'function')
+        {
+            result = result(args);
+        }
+        return result;
+    } catch(error) {
+        console.error("Mistigri called " + name + " and received an error");
+        console.error(error.stack);
+        return args.$placeholder;
+    }
+}
+
 var valueFor = function valueFor(name, model, bind) {
     var path = name.split(".");
     if (path[0].length === 0)
@@ -496,6 +490,17 @@ var valueFor = function valueFor(name, model, bind) {
         value = next;
     }
     return value;
+}
+
+var escape = function escape(text, config) {
+    var default_escape = getOption('escapeFunction', config);
+    try {
+        return default_escape(text);
+    } catch(error) {
+        console.error("Mistigri encountered an error while escaping " + action);
+        console.error(error.stack);
+        return getOption('placeholder', config);
+    }
 }
 
 var unbackslash = function(_, char) {
@@ -532,4 +537,4 @@ var getOption = function getOption(name, config) {
 return {prrcess: main, process:main, feed: feed, options: options}; // note: prrcess gives cooler results, I swear. 
 })();
 
-if (module !== undefined) module.exports = mistigri;
+if (typeof module !== 'undefined') module.exports = mistigri;
