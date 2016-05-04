@@ -493,11 +493,11 @@ var valueFor = function valueFor(name, model, bind) {
 }
 
 var escape = function escape(text, config) {
-    var default_escape = getOption('escapeFunction', config);
+    var escape_func = getOption('escapeFunction', config);
     try {
-        return default_escape(text);
+        return escape_func(text);
     } catch(error) {
-        console.error("Mistigri encountered an error while escaping " + action);
+        console.error("Mistigri encountered an error while escaping '" + text + "'");
         console.error(error.stack);
         return getOption('placeholder', config);
     }
