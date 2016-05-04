@@ -120,6 +120,7 @@ var render = function render(parts, model, config, includes) {
     var close_brace = getOption('closeBrace', config);
     var default_text = getOption('placeholder', config);
     var bind = getOption('methodCall', config);
+    var escape_func = getOption('escapeFunction', config);
     var rendered = parts[0];
     var position = rendered.length;
     var offset = includes.offset;
@@ -181,7 +182,7 @@ var render = function render(parts, model, config, includes) {
             default:
                 if (in_block > 0) break;
                 action = parseAction(mistigri, args, bind);
-                rendered += escape(handleValue(action, args, bind), config);
+                rendered += escape(handleValue(action, args, bind), escape_func, default_text);
         }
         if (in_block <= 0)
         {
@@ -492,14 +493,13 @@ var valueFor = function valueFor(name, model, bind) {
     return value;
 }
 
-var escape = function escape(text, config) {
-    var escape_func = getOption('escapeFunction', config);
+var escape = function escape(text, escape_func, placeholder) {
     try {
         return escape_func(text);
     } catch(error) {
         console.error("Mistigri encountered an error while escaping '" + text + "'");
         console.error(error.stack);
-        return getOption('placeholder', config);
+        return placeholder;
     }
 }
 
