@@ -1,21 +1,9 @@
 var mistigri = require("../mistigri.js");
 var fs = require("fs");
 
-// Some generic setup
-
 mistigri.options.escapeFunction = String;
 
-function readFile(name, options) {
-    return new Promise(function fsReadFile(fulfill, reject) {
-        var fsCallback = function fsCallback(error, data) {
-            if (error) reject(error);
-            else fulfill(data);
-        }
-        fs.readFile(name, (options === undefined) ? "utf8" : options, fsCallback);
-    });
-}
-
-// This is the filter function
+// A filter function which converts to uppercase
 
 function uppercaseFilter(args) {
     var toUpper = function toUpper(text) {
@@ -24,7 +12,10 @@ function uppercaseFilter(args) {
     
     if ('$invertBlock' in args) // we are inside a block
     {
-        return mistigri.prrcess(args.$template, args.$model).then(toUpper);
+        return toUpper(mistigri.prrcess(args.$template, args.$model).toString());
+        // The above assumes no includes.
+        // If there were includes the function would use promises instead:
+        // return mistigri.prrcess(args.$template, args.$model).then(toUpper);
     }
     else
     {
@@ -34,8 +25,9 @@ function uppercaseFilter(args) {
 
 // Render the template using the filter
 
-readFile("filter.mi").then(function(template) {
-    return mistigri.prrcess(template, {
+fs.readFile("filter.mi", "utf8", function(error, template) {
+    if (error) throw error;
+    console.log("" + mistigri.prrcess(template, {
         CAPS: uppercaseFilter
-    });
-}).then(console.log);
+    }));
+});
