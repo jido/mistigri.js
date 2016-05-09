@@ -1,0 +1,12 @@
+Since the text within a block is passed almost unprocessed 
+to a filter function, you can create a {{#raw}}{{#raw}}{{/raw}}
+filter to prevent the processing of a block of text{{/raw}}.
+
+It is also very simple to create a {{#raw}}{{#comment}}
+{{/comment}} filter which replaces the text it encloses with
+the empty string ''{{/raw}}.
+
+{{#comment}}This text will not appear in the output{{/comment}}
+
+The only limitation is that Mistigri checks block nesting, so
+the text inside the block must be a valid Mistigri template.
