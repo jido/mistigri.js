@@ -23,7 +23,7 @@ mistigri.options.reader = mistigri.feed({
     contact: "https://github.com/jido/mistigri.js"
 });
 
-// Render three different pages using the same layour
+// Render three different pages using the same layout
 
 readFile("layout.mi").then(function(template) {
     return mistigri.prrcess(template, {homeTab: true, body: "home"})}).then(console.log);

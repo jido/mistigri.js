@@ -145,7 +145,10 @@ var render = function render(parts, model, config, includes) {
             case "^":
                 if (in_block > 0)
                 {
-                    ++in_block;
+                    if (parseAction(mistigri.substr(1)) === action)
+                    {
+                        ++in_block;
+                    }
                     break;      // break out of switch case
                 }
                 in_block = 1;
@@ -155,11 +158,17 @@ var render = function render(parts, model, config, includes) {
                 start_text = text;
                 break;
             case "/":
-                --in_block;
-                if (in_block > 0) break;
-                if (in_block < 0 || mistigri.substr(1).trim() !== action)
+                if (in_block > 0)
                 {
-                    rendered += mistigri;       // invalid close tag
+                    if (parseAction(mistigri.substr(1)) === action)
+                    {
+                        --in_block;
+                    }
+                    if (in_block > 0) break;
+                }
+                else
+                {
+                    rendered += mistigri;   // invalid close tag
                     break;
                 }
                 args.$ending = text;
@@ -369,10 +378,13 @@ var parseAction = function parseAction(tag, args, bind) {
     var parts = /^\s*(\S+)\s*([^]*)/.exec(tag);
     if (parts === null) return "";
     var action = parts[1];
-    args.$action = action;
-    if (parts[2].length > 0)
+    if (args !== undefined)
     {
-        getArgs(parts[2], args, bind);
+        args.$action = action;
+        if (parts[2].length > 0)
+        {
+            getArgs(parts[2], args, bind);
+        }
     }
     return action;
 }
