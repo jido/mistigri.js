@@ -5,6 +5,7 @@ It could be called an antinome of Handlebars, extending Mustache
 without the addition of new keywords.
 The main new concept is that of arguments.
 
+[https://github.com/jido/mistigri.js/Examples]{Examples}
 
 Supported features
 -------
@@ -82,7 +83,7 @@ The ``{{.}}`` name represents the value or the current item in the
 ~~~
 
   If name is associated with a function returning a string, the
-  return value of this function is inserted as text. If it returns 
+  return value of this function is inserted as text. If it returns a promise then the text is inserted at the end of the rendering. If it returns 
   anything else, the returned value is used to decide how many times 
   to insert the text between tags.
   
@@ -108,8 +109,7 @@ When the value is a function the special argument $invertBlock is
 ~~~
 
   Includes another template at the specified location.
-  This feature requires a callback function to be called at the end of the
-  rendering.
+  This feature relies on promises to defer the output until all the data is ready. However, the returned promise can be immediately converted to text if you want to see the result before the insertion of other templates. 
   
   The path cannot contain spaces. But it can refer to an argument which is
   allowed to contain spaces, for example:
@@ -168,7 +168,7 @@ Configuration options
   The default is a function that does an Ajax request when provided
   an URI (requires DOM).
   
-  There is also a reader generator to use for testing purposes which
+  There is also a reader generator for testing purposes which
   returns a reader when fed an object containing templates. This is
   an example of use:
 
