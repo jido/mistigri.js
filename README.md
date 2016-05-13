@@ -83,7 +83,7 @@ The ``{{.}}`` name represents the value or the current item in the
 ~~~
 
   If name is associated with a function returning a string, the
-  return value of this function is inserted as text. If it returns a promise then the text is inserted at the end of the rendering. If it returns 
+  return value of this function is inserted as text. If it returns a promise then the text is inserted in place at the end of the rendering. If it returns 
   anything else, the returned value is used to decide how many times 
   to insert the text between tags.
   
@@ -109,7 +109,6 @@ When the value is a function the special argument $invertBlock is
 ~~~
 
   Includes another template at the specified location.
-  This feature relies on promises to defer the output until all the data is ready. However, the returned promise can be immediately converted to text if you want to see the result before the insertion of other templates. 
   
   The path cannot contain spaces. But it can refer to an argument which is
   allowed to contain spaces, for example:
@@ -119,7 +118,9 @@ When the value is a function the special argument $invertBlock is
 ~~~
 
   All the arguments make up the model of the included template.
-  
+
+   This feature relies on promises to defer the output until all the data is ready. However, the returned promise can be immediately converted to text if you want to see the result before the insertion of other templates. 
+
   Templates are cached so they don't need to be loaded again and again,
   and the argument ``render="no"`` indicates that the template should
   only be preloaded and not rendered out.
