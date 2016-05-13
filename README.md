@@ -5,7 +5,7 @@ It could be called an antinome of Handlebars, extending Mustache
 without the addition of new keywords.
 The main new concept is that of arguments.
 
-[Examples](https://github.com/jido/mistigri.js/Examples)
+[Examples](https://github.com/jido/mistigri.js/tree/master/Examples)
 
 Supported features
 -------
