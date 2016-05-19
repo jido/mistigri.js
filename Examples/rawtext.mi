@@ -10,8 +10,9 @@ string ''{{/raw}}.
 {{#comment}}This text will not appear in the output {{raw text
 = "Note: Mistigri _is_ allowed here."}}{{/comment}}
 *
-The only limitation is that Mistigri checks block nesting, so
-the same action tags within the block must be balanced.
+Mistigri checks block nesting, so a comment block can contain
+another comment block. The outside block only ends when the 
+tags are balanced.
 
 
 
