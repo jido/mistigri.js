@@ -219,6 +219,11 @@ var handleValue = function handleValue(action, args, bind) {
             result = value ? args.yes : args.no;
             break;
         case 'function':
+			if ('$invertBlock' in args)
+			{
+				console.warn("Mistigri saw $invertBlock in arguments, possible DOS attempt!");
+				delete args.$invertBlock;
+			}
             result = callFilter(action, value, args);
             break;
         default:
