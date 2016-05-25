@@ -98,3 +98,4 @@ test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner}}{{.}} @{{$item_
     "A(1 @A,2 @A,3 @A,)B(1 @B,2 @B,3 @B,)");
 test(mistigri.prrcess("<nl><li>\n<i>{{#test tag='li'}}{{.}}{{/test}}</i> letter</li>\n</nl>", {test: ["x", "y", "z"]}),
     "<nl><li>\n<i>x</i> letter</li><li>\n<i>y</i> letter</li><li>\n<i>z</i> letter</li>\n</nl>");
+test(mistigri.prrcess("({{f $invertBlock= true}}!)", {f: function(args) {return '$invertBlock' in args ? args.$template.join("Oops{{") : "xyz"}}), "(xyz!)");
