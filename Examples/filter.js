@@ -34,8 +34,8 @@ function uppercaseFilter(args) {
 
 // Render the template using the filter
 
+var model = {CAPS: uppercaseFilter};
+
 readFile("filter.mi").then(function(template) {
-    return mistigri.prrcess(template, {
-        CAPS: uppercaseFilter
-    });
+    return mistigri.prrcess(template, model);
 }).then(console.log);
