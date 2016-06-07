@@ -256,6 +256,11 @@ Special arguments passed to a block opening function
   
   True if the current block is inverted.
 
+  __$inner__ : _function( ) &#x2192; Promise of string_
+  
+  A function that returns the processed contents of the block
+  wrapped in a promise.
+
   __$prelude__ : _string_
   
   The rendered text between the start of the enclosing block and the 
