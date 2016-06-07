@@ -308,7 +308,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
 }
 
 var prepModel = function prepModel(model, item, count, total, suffix) {
-    var submodel = model;
+    var submodel = Object.create(model);
     submodel.$item = item;
     submodel.$count = count;
     submodel.$total = total;
@@ -320,7 +320,6 @@ var prepModel = function prepModel(model, item, count, total, suffix) {
     }
     if (typeof item === 'object' && item !== null)
     {
-        submodel = Object.create(submodel);
         for (var key in item)
         {
             submodel[key + suffix] = item[key];
