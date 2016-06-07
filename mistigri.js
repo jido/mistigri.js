@@ -330,19 +330,19 @@ var prepModel = function prepModel(model, item, count, total, suffix) {
 
 var handleInclude = function handleInclude(action, args, config, includes) {
     var path = valueFor(action, args, false);
-    delete args.$template;
-    delete args.$model;
-    delete args.$position;
-    delete args.$placeholder;
     if (path === null)
     {
         path = action;
     }
+    var preload = ('render' in args && args.render === "no");
+    delete args.$template;
+    delete args.$model;
+    delete args.$position;
+    delete args.$placeholder;
     if (path in includes.cache)
     {
-        return render(includes.cache[path], args, config, includes);
+        return preload ? "" : render(includes.cache[path], args, config, includes);
     }
-    var preload = ('render' in args && args.render === "no");
     var read = getOption('reader', config);
     includes.work.push({deferred: read(path), at: includes.offset, path: path, model: args, render: !preload});
     return "";  // Rendered output will be inserted later
