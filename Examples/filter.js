@@ -22,9 +22,9 @@ function uppercaseFilter(args) {
         return text.toLocaleUpperCase();
     }
     
-    if ('$invertBlock' in args) // we are inside a block
+    if ('$inner' in args) // we are inside a block
     {
-        return mistigri.prrcess(args.$template, args.$model).then(toUpper);
+        return args.$inner().then(toUpper);
     }
     else
     {

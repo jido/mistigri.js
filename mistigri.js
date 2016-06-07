@@ -71,7 +71,6 @@ var main = function prrcess(text, model, config) {
         template = Array.isArray(text) ? text : String(text).split(open_brace);
     }
     var result;
-    var rendered;
     if (template === null)
     {
         console.error("Mistigri doesn't understand this template type: '" + typeof text + "'");
@@ -83,19 +82,13 @@ var main = function prrcess(text, model, config) {
             }
             deny(error);
         });
-        rendered = "error";
+        result.toString() = function toString() {return "error"};
     }
     else
     {
         model = (model === undefined) ? {} : model;
         var includes = {work: [], offset: 0, cache: {}};
-        rendered = render(template, model, config, includes);
-        result = new Promise(function purr(grant, deny) {
-            handleAllIncludes(includes, config, rendered, rendered.length, grant);
-        });
-    }
-    result.toString = function toString() {
-        return rendered;
+        result = renderAll(template, model, config, includes);
     }
     return result;
 }
@@ -113,6 +106,17 @@ var feed = function feed(templates) {
             }
         });
     }
+}
+
+var renderAll = function renderAll(template, model, config, includes) {
+    var rendered = render(template, model, config, includes);
+    var result = new Promise(function purr(grant, deny) {
+        handleAllIncludes(includes, config, rendered, rendered.length, grant);
+    });
+    result.toString = function toString() {
+        return rendered;
+    }
+    return result;    
 }
 
 var render = function render(parts, model, config, includes) {
@@ -219,10 +223,11 @@ var handleValue = function handleValue(action, args, bind) {
             result = value ? args.yes : args.no;
             break;
         case 'function':
-            if ('$invertBlock' in args)
+            if ('$invertBlock' in args || '$inner' in args)
             {
-                console.warn("Mistigri saw $invertBlock in arguments, possible DOS attempt!");
+                console.warn("Mistigri saw $inner or $invertBlock in arguments, possible DOS attempt!");
                 delete args.$invertBlock;
+                delete args.$inner;
             }
             result = callFilter(action, value, args);
             break;
@@ -241,12 +246,15 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     var result = "";
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
     parts[0] = content;
-    args.$invertBlock = invert;
-    args.$template = parts;
     var bind = getOption('methodCall', config);
     var value = valueFor(action, args.$model, bind);
     if (typeof value === 'function')
     {
+        args.$template = parts;
+        args.$invertBlock = invert;
+        args.$inner = function $inner() {
+            return renderAll(parts, args.$model, config, includes);
+        }
         value = callFilter(action, value, args);
         if (typeof value === 'string')
         {
