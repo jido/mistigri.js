@@ -329,22 +329,24 @@ var prepModel = function prepModel(model, item, count, total, suffix) {
 }
 
 var handleInclude = function handleInclude(action, args, config, includes) {
+    var preload = ('render' in args && args.render === "no");
+    delete args.render;
+    delete args.$template;
+    delete args.$model;
+    delete args.$position;
+    delete args.$placeholder;
     var path = valueFor(action, args, false);
     if (path === null)
     {
         path = action;
     }
-    var preload = ('render' in args && args.render === "no");
-    delete args.$template;
-    delete args.$model;
-    delete args.$position;
-    delete args.$placeholder;
     if (path in includes.cache)
     {
         return preload ? "" : render(includes.cache[path], args, config, includes);
     }
     var read = getOption('reader', config);
-    includes.work.push({deferred: read(path), at: includes.offset, path: path, model: args, render: !preload});
+    var model = preload ? null : args;
+    includes.work.push({deferred: read(path), at: includes.offset, path: path, model: model, render: !preload});
     return "";  // Rendered output will be inserted later
 }
 
