@@ -19,7 +19,13 @@ function test(run, expected) {
             }
         }
     }
-    run.then(end_test(id));
+	var unexpected_error = function unexpected_error(id) {
+		return function(err) {
+			console.error(id + " - " + err.name + ": " + err.message + ": FAIL" +
+				"\nExpected - " + expected + "\nCaught an error instead.")
+		}
+	}
+    run.then(end_test(id), unexpected_error(id));
     ++id;
 }
 
@@ -94,9 +100,9 @@ test(mistigri.process("{{here}}, {{here}}{{#here}}---{{here}}|{{.}}{{/here}}", {
 test(mistigri.prrcess("({{#pr}}{{test}},{{/pr}})", {pr: function(o) 
     {return mistigri.prrcess(o.$template, {test: "xyz"})}}), "(xyz,)");
 
-test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner}}{{.}} @{{$item_1}},{{/inner}}){{/outer}}", {outer:["A", "B"], inner:[1, 2, 3]}),
-    "A(1 @A,2 @A,3 @A,)B(1 @B,2 @B,3 @B,)");
+test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner separator=','}}{{.}} @{{$item_1}}{{/inner}}){{/outer}}", {outer:["A", "B"], inner:[1, 2, 3]}),
+    "A(1 @A,2 @A,3 @A)B(1 @B,2 @B,3 @B)");
 test(mistigri.prrcess("<nl><li>\n<i>{{#test tag='li'}}{{.}}{{/test}}</i> letter</li>\n</nl>", {test: ["x", "y", "z"]}),
     "<nl><li>\n<i>x</i> letter</li><li>\n<i>y</i> letter</li><li>\n<i>z</i> letter</li>\n</nl>");
 test(mistigri.prrcess("({{f $invertBlock= true}}!)", {f: function(args) {return '$invertBlock' in args ? args.$template.join("Oops{{") : "xyz"}}), "(xyz!)");
-test(mistigri.prrcess("({{#test}}xyz{{#test suffix='_1'}}{{.}}{{/test}} {{$item}} {{$count_1}},{{/test}})", {test: [10, 3]}), "(xyz103 10 N/A,xyz103 3 N/A,)");
+test(mistigri.prrcess("({{#test separator=','}}xyz{{#test suffix='_1'}}{{.}}{{/test}} {{$item}} {{$count_1}}{{/test}})", {test: [10, 3]}), "(xyz103 10 N/A,xyz103 3 N/A)");

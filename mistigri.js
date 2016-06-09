@@ -271,7 +271,8 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     if ((is_empty && invert) || (!is_empty && !invert))
     {
         var suffix = ('suffix' in args) ? args.suffix : "";
-        var middle = ""; 
+        var separator = ('separator' in args) ? args.separator : "";
+        var middle = separator; 
         if ('tag' in args)
         {
             var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
