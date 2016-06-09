@@ -247,13 +247,16 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
     var invert = (parts[0].lastIndexOf("^", 0) === 0);
     parts[0] = content;
     var bind = getOption('methodCall', config);
-    var value = valueFor(action, args.$model, bind);
+    var model = args.$model;
+    var value = valueFor(action, model, bind);
+    var prelude = args.$prelude;    // preserve value
+    var ending = args.$ending;      // preserve value
     if (typeof value === 'function')
     {
         args.$template = parts;
         args.$invertBlock = invert;
         args.$inner = function $inner() {
-            return renderAll(parts, args.$model, config, includes);
+            return renderAll(parts, model, config, includes);
         }
         value = callFilter(action, value, args);
         if (typeof value === 'string')
@@ -275,12 +278,12 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         var middle = separator; 
         if ('tag' in args)
         {
-            var left = args.$prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
-            var right = args.$ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
+            var left = prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
+            var right = ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
             if (left !== -1 && right !== -1)
             {
-                right = args.$ending.indexOf(">", right) + 1;
-                middle = args.$ending.substr(0, right) + args.$prelude.substr(left);
+                right = ending.indexOf(">", right) + 1;
+                middle = ending.substr(0, right) + prelude.substr(left);
             }
         }
 
@@ -296,7 +299,7 @@ var handleBlock = function handleBlock(action, args, content, parts, config, inc
         {
             count += 1;
             var item = list[index];
-            var submodel = prepModel(args.$model, item, count, total, suffix);
+            var submodel = prepModel(model, item, count, total, suffix);
             if (count > 1 && middle.length !== 0)
             {
                 result += middle;

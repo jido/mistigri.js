@@ -1,0 +1,11 @@
+
+The predefined Mistigri include tag does not handle blocks,
+however you can define an "include" function which does.
+
+Demonstration: {{#include file = source}}
+This template comes from file "{{source}}"
+{{/include}}
+
+The End.
+
+
