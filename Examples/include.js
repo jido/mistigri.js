@@ -17,8 +17,8 @@ function readFile(name, options) {
 
 // Define an include file function
 
-function include(args) {
-	if (!'file' in args)
+function includeFunction(args) {
+	if (!('file' in args))
 	{
 		return args.$placeholder;
 	}
@@ -44,7 +44,7 @@ function include(args) {
 
 // Render the template using the include function
 
-var model = {include: include, source: "included.mi"};
+var model = {include: includeFunction, source: "included.mi"};
 
 readFile("include.mi").then(function(template) {
     return mistigri.prrcess(template, model);
