@@ -129,8 +129,11 @@ var render = function render(parts, model, config, includes) {
     var position = rendered.length;
     var offset = includes.offset;
     var in_block = 0;
+    var inverted;
     var start;
     var start_text;
+    var else_start = 0;
+    var else_start_text;
     var action;
     var args;
     for (var partnum = 1; partnum < parts.length; ++partnum) 
@@ -143,19 +146,17 @@ var render = function render(parts, model, config, includes) {
         {
             args = {$position: position, $template: parts, $model: model, $placeholder: default_text}; 
         }
-        switch (part.substr(0, 1)) 
+        switch (mistigri.substr(0, 1)) 
         {
             case "#":
             case "^":
-                if (in_block > 0)
+                if (in_block > 0 && parseAction(mistigri.substr(1)) !== action)
                 {
-                    if (parseAction(mistigri.substr(1)) === action)
-                    {
-                        ++in_block;
-                    }
-                    break;      // break out of switch case
+                    break;      // ignore non-matching nested block
                 }
-                in_block = 1;
+                ++in_block;
+                if (in_block > 1) break;    // nested block
+                inverted = (mistigri.lastIndexOf("^", 0) === 0);
                 action = parseAction(mistigri.substr(1), args, bind);
                 args.$prelude = rendered;
                 start = partnum;
@@ -164,9 +165,17 @@ var render = function render(parts, model, config, includes) {
             case "/":
                 if (in_block > 0)
                 {
-                    if (parseAction(mistigri.substr(1)) === action)
+                    var this_action = parseAction(mistigri.substr(1));
+                    if (this_action === action)
                     {
                         --in_block;
+                    }
+                    else if (in_block === 1 && this_action === "^" + action)
+                    {
+                        if (inverted) break;    // already inverted, no else allowed
+                        else_start = partnum;   // starting else part of the block
+                        else_start_text = text;
+                        inverted = true;
                     }
                     if (in_block > 0) break;
                 }
@@ -177,7 +186,17 @@ var render = function render(parts, model, config, includes) {
                 }
                 args.$ending = text;
                 includes.offset = offset + rendered.length;
-                rendered += handleBlock(action, args, start_text, parts.slice(start, partnum), config, includes);
+                if (else_start === 0)
+                {
+                    rendered += handleBlock(action, inverted, args, start_text, parts.slice(start, partnum), config, includes);
+                }
+                else
+                {
+                    // Only one of the following will modify the rendered text
+                    rendered += handleBlock(action, false, args, start_text, parts.slice(start, else_start), config, includes);
+                    rendered += handleBlock(action, true, args, else_start_text, parts.slice(else_start, partnum), config, includes);
+                    else_start = 0;
+                }
                 break;
             case ">":
                 if (in_block > 0) break;
@@ -242,9 +261,9 @@ var handleValue = function handleValue(action, args, bind) {
     return result;
 }
 
-var handleBlock = function handleBlock(action, args, content, parts, config, includes) {
+var handleBlock = function handleBlock(action, invert, args, content, parts, config, includes) {
     var result = "";
-    var invert = (parts[0].lastIndexOf("^", 0) === 0);
+    //console.log("HANDLEBLOCK: " + parts[0] + " content=" + content + " invert=" + invert);
     parts[0] = content;
     var bind = getOption('methodCall', config);
     var model = args.$model;

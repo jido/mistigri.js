@@ -31,3 +31,4 @@ readFile("layout.mi").then(function(template) {
     return mistigri.prrcess(template, {bioTab: true, body: "bio"})}).then(console.log);
 readFile("layout.mi").then(function(template) {
     return mistigri.prrcess(template, {contactTab: true, body: "contact"})}).then(console.log);
+

@@ -38,6 +38,8 @@ test(mistigri.prrcess("({{test}})", {test: {toString: function() {return this.x}
 test(mistigri.prrcess("({{test.x}})", {test: {x: "O"}}), "(O)");
 test(mistigri.prrcess("({{test.z}})", {test: {x: "O"}}), "(N/A)");
 test(mistigri.prrcess("({{#test}}{{x}}{{/test}})", {test: {x: "O"}}), "(O)");
+test(mistigri.prrcess("({{#test}}{{x}}{{/^test}}empty{{/test}})", {test: {x: "O"}}), "(O)");
+test(mistigri.prrcess("({{#test}}{{x}}{{/^test}}empty{{/test}})", {test: []}), "(empty)");
 
 test(mistigri.prrcess("({{ \ntest}})", {test: "xyz"}), "(xyz)");
 test(mistigri.prrcess("({{  test\t \n}})", {test: "xyz"}), "(xyz)");
@@ -100,9 +102,13 @@ test(mistigri.process("{{here}}, {{here}}{{#here}}---{{here}}|{{.}}{{/here}}", {
 test(mistigri.prrcess("({{#pr}}{{test}},{{/pr}})", {pr: function(o) 
     {return mistigri.prrcess(o.$template, {test: "xyz"})}}), "(xyz,)");
 
-test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner separator=','}}{{.}} @{{$item_1}}{{/inner}}){{/outer}}", {outer:["A", "B"], inner:[1, 2, 3]}),
-    "A(1 @A,2 @A,3 @A)B(1 @B,2 @B,3 @B)");
+test(mistigri.prrcess("{{#outer suffix='_1'}}{{$item}}({{#inner separator=', '}}{{.}} @{{$item_1}}{{/inner}}){{/outer}}", {outer:["A", "B"], inner:[1, 2, 3]}),
+    "A(1 @A, 2 @A, 3 @A)B(1 @B, 2 @B, 3 @B)");
 test(mistigri.prrcess("<nl><li>\n<i>{{#test tag='li'}}{{.}}{{/test}}</i> letter</li>\n</nl>", {test: ["x", "y", "z"]}),
     "<nl><li>\n<i>x</i> letter</li><li>\n<i>y</i> letter</li><li>\n<i>z</i> letter</li>\n</nl>");
 test(mistigri.prrcess("({{f $invertBlock= true}}!)", {f: function(args) {return '$invertBlock' in args ? args.$template.join("Oops{{") : "xyz"}}), "(xyz!)");
 test(mistigri.prrcess("({{#test separator=','}}xyz{{#test suffix='_1'}}{{.}}{{/test}} {{$item}} {{$count_1}}{{/test}})", {test: [10, 3]}), "(xyz103 10 N/A,xyz103 3 N/A)");
+test(mistigri.prrcess("({{#x}}-{{^x}}103{{/^x}}abc{{/x}}*{{/x}})", {x: {x: 0}}), "(-103/^xabc*)");
+
+test(mistigri.prrcess("{{#block}}x{{/wrong}}-abcdef{{/block}}@{{>here lad = block}}}", {block: 123}, {reader: 
+    mistigri.feed({here: "hi {{lad}}!"})}), "x/wrong-abcdef@hi 123!}");
