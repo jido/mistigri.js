@@ -184,18 +184,34 @@ var render = function render(parts, model, config, includes) {
                     rendered += mistigri;   // invalid close tag
                     break;
                 }
-                args.$ending = text;
                 includes.offset = offset + rendered.length;
-                if (else_start === 0)
+                var block_info = { 
+                    invert: else_start === 0 && inverted, 
+                    content: start_text, 
+                    prelude: args.$prelude, 
+                    ending: text,
+                    parts: parts.slice(start, partnum), 
+                    args: args, config: config, includes: includes};
+                var value = evaluateAction(action, block_info);
+                if (value !== undefined)
                 {
-                    rendered += handleBlock(action, inverted, args, start_text, parts.slice(start, partnum), config, includes);
-                }
-                else
-                {
-                    // Only one of the following will modify the rendered text
-                    rendered += handleBlock(action, false, args, start_text, parts.slice(start, else_start), config, includes);
-                    rendered += handleBlock(action, true, args, else_start_text, parts.slice(else_start, partnum), config, includes);
-                    else_start = 0;
+                    if (else_start === 0)
+                    {
+                        rendered += handleBlock(value, block_info);
+                    }
+                    else
+                    {
+                        // Only one of the following will modify the rendered text
+                        block_info.parts = parts.slice(start, else_start);
+                        rendered += handleBlock(value, block_info);
+                    
+                        block_info.parts = parts.slice(else_start, partnum);
+                        block_info.content = else_start_text;
+                        block_info.invert = true;
+                        rendered += handleBlock(value, block_info);
+                    
+                        else_start = 0;
+                    }
                 }
                 break;
             case ">":
@@ -261,48 +277,50 @@ var handleValue = function handleValue(action, args, bind) {
     return result;
 }
 
-var handleBlock = function handleBlock(action, invert, args, content, parts, config, includes) {
-    var result = "";
-    //console.log("HANDLEBLOCK: " + parts[0] + " content=" + content + " invert=" + invert);
-    parts[0] = content;
-    var bind = getOption('methodCall', config);
-    var model = args.$model;
+var evaluateAction = function evaluateAction(action, info) {
+    var bind = getOption('methodCall', info.config);
+    var model = info.args.$model;
     var value = valueFor(action, model, bind);
-    var prelude = args.$prelude;    // preserve value
-    var ending = args.$ending;      // preserve value
     if (typeof value === 'function')
     {
-        args.$template = parts;
-        args.$invertBlock = invert;
+        var args = info.args;
+        var config = info.config;
+        var includes = info.includes;
+        args.$template = info.parts;
+        args.$template[0] = info.content;
+        args.$ending = info.ending;
+        args.$invertBlock = info.invert;
         args.$inner = function $inner() {
-            return renderAll(parts, model, config, includes);
+            return renderAll(args.$template, model, config, includes);
         }
         value = callFilter(action, value, args);
-        if (typeof value === 'string')
-        {
-            return value; // add to output
-        }
-        else if (value instanceof Promise)
+        if (value instanceof Promise)
         {
             includes.work.push({deferred: value, at: includes.offset, path: null, model: null, render: true});
-            return "";
+            value = undefined;
         }
     }
+    return value;
+}
+
+var handleBlock = function handleBlock(value, info) {
+    var result = "";
+    info.parts[0] = info.content;
     var is_empty_array = Array.isArray(value) && value.length === 0;
     var is_empty = !value || is_empty_array;
-    if ((is_empty && invert) || (!is_empty && !invert))
+    if ((is_empty && info.invert) || (!is_empty && !info.invert))
     {
-        var suffix = ('suffix' in args) ? args.suffix : "";
-        var separator = ('separator' in args) ? args.separator : "";
+        var suffix = ('suffix' in info.args) ? info.args.suffix : "";
+        var separator = ('separator' in info.args) ? info.args.separator : "";
         var middle = separator; 
-        if ('tag' in args)
+        if ('tag' in info.args)
         {
-            var left = prelude.toLowerCase().lastIndexOf("<" + args.tag.toLowerCase());
-            var right = ending.toLowerCase().indexOf("</" + args.tag.toLowerCase());
+            var left = info.prelude.toLowerCase().lastIndexOf("<" + info.args.tag.toLowerCase());
+            var right = info.ending.toLowerCase().indexOf("</" + info.args.tag.toLowerCase());
             if (left !== -1 && right !== -1)
             {
-                right = ending.indexOf(">", right) + 1;
-                middle = ending.substr(0, right) + prelude.substr(left);
+                right = info.ending.indexOf(">", right) + 1;
+                middle = info.ending.substr(0, right) + info.prelude.substr(left);
             }
         }
 
@@ -311,20 +329,20 @@ var handleBlock = function handleBlock(action, invert, args, content, parts, con
         {
             list = [is_empty_array? null : value];      // special handling for empty array
         }
-        var offset = includes.offset;
-        var total = invert ? 0 : list.length;
+        var offset = info.includes.offset;
+        var total = info.invert ? 0 : list.length;
         var count = 0;
         for (var index in list)
         {
             count += 1;
             var item = list[index];
-            var submodel = prepModel(model, item, count, total, suffix);
+            var submodel = prepModel(info.args.$model, item, count, total, suffix);
             if (count > 1 && middle.length !== 0)
             {
                 result += middle;
             }
-            includes.offset = offset + result.length;
-            result += render(parts, submodel, config, includes);
+            info.includes.offset = offset + result.length;
+            result += render(info.parts, submodel, info.config, info.includes);
         }
     }
     return result;
