@@ -53,6 +53,10 @@ Supported features
 ~~~
 {{#name}}...{{/name}}
 ~~~
+_or_
+~~~
+{{#name}}...{{/^name}}...{{/name}}
+~~~
 
   Inserts the text between the tags depending on the value associated
   with name:
@@ -63,9 +67,12 @@ Supported features
   * as many times as there are elements in the array if the value is
   an array
 
-The ``{{.}}`` name represents the value or the current item in the
+  The ``{{.}}`` name represents the value or the current item in the
   array.
-  
+
+  There can be an optional _else_ tag noted ``{{/^name}}`` which text
+  content is inserted only if the value associated with name is empty.
+
   The "separator" argument is used to provide a text to insert between
   the elements of a list.
   
@@ -82,6 +89,21 @@ The ``{{.}}`` name represents the value or the current item in the
       <td>{{#person tag="TR"}}{{first_name}}</td>
       <td>{{last_name}}{{/person}}</td>
    </tr>
+</table>
+~~~
+
+  Sample result:
+  
+~~~
+<table>
+  <tr>
+    <td>Simone</td>
+    <td>Hamao</td>
+  </tr>
+  <tr>
+    <td>Arturio</td>
+    <td>Ganj</td>
+  </tr>
 </table>
 ~~~
 
@@ -182,6 +204,12 @@ mistigri.process(
   {}, 
   {reader: mistigri.feed({include: "catface &#931;:{"})}
 );
+~~~
+
+  The output is:
+  
+~~~
+Mistigri catface Σ:{
 ~~~
 
 Special names added to the model
