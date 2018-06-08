@@ -192,26 +192,27 @@ var render = function render(parts, model, config, includes) {
                     ending: text,
                     parts: parts.slice(start, partnum), 
                     args: args, config: config, includes: includes};
-                var value = evaluateAction(action, block_info);
-                if (value !== undefined)
+                var result = evaluateAction(action, block_info);
+                if ('filtered' in result)
                 {
-                    if (else_start === 0)
-                    {
-                        rendered += handleBlock(value, block_info);
-                    }
-                    else
-                    {
-                        // Only one of the following will modify the rendered text
-                        block_info.parts = parts.slice(start, else_start);
-                        rendered += handleBlock(value, block_info);
-                    
-                        block_info.parts = parts.slice(else_start, partnum);
-                        block_info.content = else_start_text;
-                        block_info.invert = true;
-                        rendered += handleBlock(value, block_info);
-                    
-                        else_start = 0;
-                    }
+                    rendered += result.filtered;
+                }
+                else if (else_start === 0)
+                {
+                    rendered += handleBlock(result.value, block_info);
+                }
+                else
+                {
+                    // Only one of the following will modify the rendered text
+                    block_info.parts = parts.slice(start, else_start);
+                    rendered += handleBlock(result.value, block_info);
+                
+                    block_info.parts = parts.slice(else_start, partnum);
+                    block_info.content = else_start_text;
+                    block_info.invert = true;
+                    rendered += handleBlock(result.value, block_info);
+                
+                    else_start = 0;
                 }
                 break;
             case ">":
@@ -297,18 +298,15 @@ var evaluateAction = function evaluateAction(action, info) {
         value = callFilter(action, value, args);
         if (typeof value === 'string')
         {
-            var copy = value;
-            value = new Promise(function(produce, _) {
-                produce(copy);
-            });
+            return {filtered: value};
         }
         if (value instanceof Promise)
         {
             includes.work.push({deferred: value, at: includes.offset, path: null, model: null, render: true});
-            value = undefined;
+            return {filtered: ""};
         }
     }
-    return value;
+    return {value: value};
 }
 
 var handleBlock = function handleBlock(value, info) {
