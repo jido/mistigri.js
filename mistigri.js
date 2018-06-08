@@ -286,14 +286,22 @@ var evaluateAction = function evaluateAction(action, info) {
         var args = info.args;
         var config = info.config;
         var includes = info.includes;
-        args.$template = info.parts;
-        args.$template[0] = info.content;
+        var template = info.parts;
+        template[0] = info.content;
+        args.$template = template;
         args.$ending = info.ending;
         args.$invertBlock = info.invert;
         args.$inner = function $inner() {
-            return renderAll(args.$template, model, config, includes);
+            return renderAll(template, model, config, includes);
         }
         value = callFilter(action, value, args);
+        if (typeof value === 'string')
+        {
+            var copy = value;
+            value = new Promise(function(produce, _) {
+                produce(copy);
+            });
+        }
         if (value instanceof Promise)
         {
             includes.work.push({deferred: value, at: includes.offset, path: null, model: null, render: true});
@@ -601,7 +609,7 @@ var getOption = function getOption(name, config) {
     return (config && name in config) ? config[name] : options[name];
 }
 
-return {prrcess: main, process:main, feed: feed, options: options}; // note: prrcess gives cooler results, I swear. 
+return {prrcess: main, process: main, feed: feed, options: options}; // note: prrcess gives cooler results, I swear. 
 })();
 
 if (typeof module !== 'undefined') module.exports = mistigri;

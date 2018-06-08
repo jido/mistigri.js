@@ -6,3 +6,5 @@ function Promise(execute) {
         return this;
     }
 }
+
+if (typeof module !== 'undefined') module.exports = {Promise: Promise};

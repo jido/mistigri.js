@@ -11,3 +11,5 @@ function readFile(name, options) {
         fs.readFile(name, (options === undefined) ? "utf8" : options, fsCallback);
     });
 }
+
+if (typeof module !== 'undefined') module.exports = {read: readFile};

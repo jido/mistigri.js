@@ -1,5 +1,5 @@
 var mistigri = require("../mistigri.js");
-var fs = require("fs");
+var file = require("../ReadFile.js");
 
 // A filter function which does not process the template
 
@@ -25,7 +25,6 @@ function commentFilter(_) {
 
 var model = {raw: rawFilter, comment: commentFilter};
 
-fs.readFile("rawtext.mi", "utf8", function(error, template) {
-    if (error) throw error;
-    console.log("" + mistigri.prrcess(template, model));
-});
+file.read("rawtext.mi").then(function(template) {
+    return mistigri.prrcess(template, model);
+}).then(console.log);
