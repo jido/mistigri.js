@@ -53,10 +53,6 @@ Supported features
 ~~~
 {{#name}}...{{/name}}
 ~~~
-_or_
-~~~
-{{#name}}...{{/^name}}...{{/name}}
-~~~
 
   Inserts the text between the tags depending on the value associated
   with name:
@@ -69,9 +65,6 @@ _or_
 
   The ``{{.}}`` name represents the value or the current item in the
   array.
-
-  There can be an optional _else_ tag noted ``{{/^name}}`` which text
-  content is inserted only if the value associated with name is empty.
 
   The "separator" argument is used to provide a text to insert between
   the elements of a list.
@@ -115,7 +108,15 @@ _or_
   If the array item or the value associated with name is an object
   then its members are added to the model. A "suffix" argument can be
   provided to rename these members.
-  
+
+~~~
+{{#name}}...{{/^name}}...{{/name}}
+~~~
+
+  Same as above with the addition of an else tag noted ``{{/^name}}``.
+  If the value associated with name is empty, the text after the else
+  tag is inserted; otherwise, the text before the else tag is inserted.
+
 ~~~
 {{^name}}...{{/name}}
 ~~~
