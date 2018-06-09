@@ -61,7 +61,7 @@ test(mistigri.prrcess("({{test x=103 y =1}})", {test: function(o) {return o.x + 
 test(mistigri.prrcess("({{test \\x=103}})", {test: function(o) {return o["\\1"]}}), "(103)");
 test(mistigri.prrcess("({{test x=1\\03}})", {test: function(o) {return o.x}}), "(1)");
 
-test(mistigri.prrcess("({{#test}}*{{.}}+{{/test}})", {test: "xyz"}), "(*xyz+)");
+test(mistigri.prrcess("({{# test}}*{{.}}+{{/ test}})", {test: "xyz"}), "(*xyz+)");
 test(mistigri.prrcess("({{^test}}*{{.}}+{{/test}})", {test: []}), "(*N/A+)");
 test(mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}), "(N/A)");
 test(mistigri.prrcess("({{&test.toExponential}})", {test: 103.9}, {methodCall: true}), "(1e+2)");

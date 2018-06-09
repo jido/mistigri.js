@@ -146,10 +146,11 @@ var render = function render(parts, model, config, includes) {
         {
             args = {$position: position, $template: parts, $model: model, $placeholder: default_text}; 
         }
+        var hat = false;
         switch (mistigri.substr(0, 1)) 
         {
             case "^":
-                var hat = true;
+                hat = true;
             case "#":
                 if (in_block > 0)
                 {
