@@ -10,7 +10,7 @@ The main new concept is that of arguments.
 Supported features
 -------
 
-~~~handlebars
+~~~clean
 {{name}}
 ~~~
 
@@ -24,7 +24,7 @@ Supported features
   If the name is associated with a function then this function is
   called to provide a value. See also Configuration Options.
   
-~~~handlebars
+~~~clean
 {{name argument = value}}
 ~~~
 
@@ -41,7 +41,7 @@ Supported features
   The value provided for the argument can be a number, a string within
   quotes or a name in the model.
   
-~~~handlebars
+~~~clean
 {{&name}}
 ~~~
 
@@ -50,8 +50,8 @@ Supported features
   The default escape function is designed to safely insert text in an
   HTML document.
   
-~~~handlebars
-{{# name}}...{{/ name}}
+~~~clean
+{{#name}}...{{/name}}
 ~~~
 
   Inserts the text between the tags depending on the value associated
@@ -76,7 +76,7 @@ Supported features
   close tag. This argument overrides "separator".
   For example, to insert a new table row for each person use:
   
-~~~handlebars
+~~~html
 <table>
    <tr>
       <td>{{#person tag="TR"}}{{first_name}}</td>
@@ -109,8 +109,8 @@ Supported features
   then its members are added to the model. A "suffix" argument can be
   provided to rename these members.
 
-~~~handlebars
-{{# name}}...{{/^name}}...{{/ name}}
+~~~clean
+{{#name}}...{{/^name}}...{{/name}}
 ~~~
 
   Same as above with the addition of an else tag noted ``{{/^name}}``.
@@ -119,8 +119,8 @@ Supported features
   
   Both ``{{/^name}}`` and ``{{^/name}}`` are recognised as an else tag.
 
-~~~handlebars
-{{^name}}...{{/ name}}
+~~~clean
+{{^name}}...{{/name}}
 ~~~
 
   Inverts the condition:
@@ -132,7 +132,7 @@ When the value is a function the special argument $invertBlock is
   set in the arguments object to indicate whether the block is inverted 
   or not.
 
-~~~handlebars
+~~~clean
 {{>path}}
 ~~~
 
@@ -141,7 +141,7 @@ When the value is a function the special argument $invertBlock is
   The path cannot contain spaces. But it can refer to an argument which is
   allowed to contain spaces, for example:
 
-~~~handlebars
+~~~clean
 {{>file file = "C:\\Program Files\\MyApplication\\template.mi"}}
 ~~~
 
@@ -153,7 +153,7 @@ When the value is a function the special argument $invertBlock is
   and the argument ``render="no"`` indicates that the template should
   only be preloaded and not rendered out.
   
-~~~
+~~~clean
 {{! comment }}
 ~~~
 
