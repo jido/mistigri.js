@@ -76,7 +76,7 @@ Supported features
   close tag. This argument overrides "separator".
   For example, to insert a new table row for each person use:
   
-~~~
+~~~html
 <table>
    <tr>
       <td>{{#person tag="TR"}}{{first_name}}</td>
@@ -87,7 +87,7 @@ Supported features
 
   Sample result:
   
-~~~
+~~~html
 <table>
   <tr>
     <td>Simone</td>
@@ -116,6 +116,8 @@ Supported features
   Same as above with the addition of an else tag noted ``{{/^name}}``.
   If the value associated with name is empty, the text after the else
   tag is inserted; otherwise, the text before the else tag is inserted.
+  
+  Both ``{{/^name}}`` and ``{{^/name}}`` are recognised as an else tag.
 
 ~~~
 {{^name}}...{{/name}}
@@ -199,7 +201,7 @@ Configuration options
   returns a reader when fed an object containing templates. This is
   an example of use:
 
-~~~
+~~~javascript
 mistigri.process(
   "Mistigri {{>include}}", 
   {}, 

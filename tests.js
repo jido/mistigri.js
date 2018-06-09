@@ -40,6 +40,8 @@ test(mistigri.prrcess("({{test.z}})", {test: {x: "O"}}), "(N/A)");
 test(mistigri.prrcess("({{#test}}{{x}}{{/test}})", {test: {x: "O"}}), "(O)");
 test(mistigri.prrcess("({{#test}}{{x}}{{/^test}}empty{{/test}})", {test: {x: "O"}}), "(O)");
 test(mistigri.prrcess("({{#test}}{{x}}{{/^test}}empty{{/test}})", {test: []}), "(empty)");
+test(mistigri.prrcess("({{#test}}{{x}}{{^/test}}empty{{/test}})", {test: {x: "O"}}), "(O)");
+test(mistigri.prrcess("({{#test}}{{x}}{{^/test}}empty{{/test}})", {test: []}), "(empty)");
 
 test(mistigri.prrcess("({{ \ntest}})", {test: "xyz"}), "(xyz)");
 test(mistigri.prrcess("({{  test\t \n}})", {test: "xyz"}), "(xyz)");

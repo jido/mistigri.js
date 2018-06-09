@@ -148,15 +148,25 @@ var render = function render(parts, model, config, includes) {
         }
         switch (mistigri.substr(0, 1)) 
         {
-            case "#":
             case "^":
-                if (in_block > 0 && parseAction(mistigri.substr(1)) !== action)
+                var hat = true;
+            case "#":
+                if (in_block > 0)
                 {
-                    break;      // ignore non-matching nested block
+                    var this_action = parseAction(mistigri.substr(1));
+                    if (hat && in_block === 1 && this_action === "/" + action)
+                    {
+                        if (inverted) break;    // already inverted, no else allowed
+                        else_start = partnum;   // starting else part of the block
+                        else_start_text = text;
+                        inverted = true;
+                        break;
+                    }
+                    if (this_action !== action) break;      // ignore non-matching nested block
                 }
                 ++in_block;
                 if (in_block > 1) break;    // nested block
-                inverted = (mistigri.lastIndexOf("^", 0) === 0);
+                inverted = hat;
                 action = parseAction(mistigri.substr(1), args, bind);
                 args.$prelude = rendered;
                 start = partnum;
