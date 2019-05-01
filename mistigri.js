@@ -82,7 +82,7 @@ var main = function prrcess(text, model, config) {
             }
             deny(error);
         });
-        result.toString() = function toString() {return "error"};
+        result.toString = function toString() {return "error"};
     }
     else
     {
