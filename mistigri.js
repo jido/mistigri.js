@@ -11,6 +11,14 @@ var model = {
     love: false,
     person: [{name: "jido", love: true}, {name: "Mrs Nock", love: false}, {}]};
 alert(mistigri.prrcess(template, model));
+----------
+Output:
+
+Test template;
+jido loves Σ:{ much
+Mrs Nock loves Σ:{ not
+Madam loves Σ:{ not
+----------
 */
 
 var mistigri = (function(){
@@ -20,34 +28,18 @@ var DEFAULT_OPEN_BRACE = "{{";
 var DEFAULT_CLOSE_BRACE = "}}";
 var DEFAULT_PLACEHOLDER = "N/A";
 var DEFAULT_METHOD_CALL = false;
-var DEFAULT_ESCAPE_FUNCTION = function escapeHtml(html) {
+var escapeHtmlReplace = function escapeHtml(html) {
+    return String(html).replaceAll("&", "&amp;").replaceAll("<", "&lt;");
+}
+var escapeHtmlDOM = function escapeHtml(html) {
     var text = document.createTextNode(html);
     var div = document.createElement('div');
     div.appendChild(text);
     return div.innerHTML;
 }
-var DEFAULT_READER = function ajaxReader(url) {
-    return new Promise(function read(fulfill, reject) {
-        var request = new XMLHttpRequest();
-        request.open("GET", url, true);
-        request.onreadystatechange = function(event) {
-            if (this.readyState === 4)
-            {
-                if (this.status === 200)
-                {
-                    fulfill(this.responseText);
-                }
-                else
-                {
-                    var miError = new Error("Mistigri ajaxReader error reading: " + url);
-                    miError.httpStatus = this.status;
-                    miError.httpResponse = this.statusText;
-                    reject(miError);
-                }
-            }
-        }
-        request.send();
-    });
+var DEFAULT_ESCAPE_FUNCTION = (typeof document === 'undefined') ? escapeHtmlReplace : escapeHtmlDOM;
+var DEFAULT_READER = function fetchText(url) {
+    return fetch(url).then((response) => response.text());
 }
 
 var options = {
@@ -58,6 +50,12 @@ var options = {
     escapeFunction: DEFAULT_ESCAPE_FUNCTION,
     reader: DEFAULT_READER
 };
+
+// Use named parameters with a Javascript function
+var useParams = function useParams(params, f) {
+  let names = params.split(",")
+  return (obj) => f.apply(undefined, names.map((name) => obj[name.trim()]))
+}
 
 var main = function prrcess(text, model, config) {
     var template = null;
@@ -618,7 +616,7 @@ var getOption = function getOption(name, config) {
     return (config && name in config) ? config[name] : options[name];
 }
 
-return {prrcess: main, process: main, feed: feed, options: options}; // note: prrcess gives cooler results, I swear. 
+return {prrcess: main, process: main, feed: feed, options: options, useParams: useParams}; // note: prrcess gives cooler results, I swear. 
 })();
 
 if (typeof module !== 'undefined') module.exports = mistigri;

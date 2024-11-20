@@ -1,5 +1,4 @@
 var mistigri = require("./mistigri.js");
-mistigri.options.escapeFunction = String;
 
 var id = 1;
 function test(run, expected) {

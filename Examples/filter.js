@@ -1,10 +1,6 @@
 var mistigri = require("../mistigri.js");
 var file = require("../ReadFile.js");
 
-// Some generic setup
-
-mistigri.options.escapeFunction = String;
-
 // This is the filter function
 
 function uppercaseFilter(args) {

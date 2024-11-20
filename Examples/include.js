@@ -1,9 +1,7 @@
 var mistigri = require("../mistigri.js");
 var File = require("../ReadFile.js");
 
-// Some generic setup
-
-mistigri.options.escapeFunction = String;
+// IMPORTANT: This is *not* how you normally include a file. See "layout.mi" for an include example.
 
 // Define an include file function
 
