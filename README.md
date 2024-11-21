@@ -10,6 +10,7 @@ The main new concept is that of arguments.
 Supported features
 -------
 
+### >
 ~~~clean
 {{name}}
 ~~~
@@ -23,7 +24,8 @@ Supported features
   
   If the name is associated with a function then this function is
   called to provide a value. See also Configuration Options.
-  
+
+### >
 ~~~clean
 {{name argument = value}}
 ~~~
@@ -43,12 +45,13 @@ Supported features
   
   Example of use:
 
-```javascript
+~~~javascript
 haveameal: mistigri.useParams("food, purr", haveMeal)
-```
+~~~
 
   When ``haveameal`` is used in the template, the Javascript function ``haveMeal()`` is called with the two named arguments in order.
   
+### >
 ~~~clean
 {{&name}}
 ~~~
@@ -58,6 +61,7 @@ haveameal: mistigri.useParams("food, purr", haveMeal)
   The default escape function is designed to safely insert text in an
   HTML document.
   
+### >
 ~~~clean
 {{#name}}...{{/name}}
 ~~~
@@ -117,6 +121,7 @@ haveameal: mistigri.useParams("food, purr", haveMeal)
   then its members are added to the model. A "suffix" argument can be
   provided to rename these members.
 
+### >
 ~~~clean
 {{#name}}...{{/^name}}...{{/name}}
 ~~~
@@ -127,6 +132,7 @@ haveameal: mistigri.useParams("food, purr", haveMeal)
   
   Both ``{{/^name}}`` and ``{{^/name}}`` are recognised as an else tag.
 
+### >
 ~~~clean
 {{^name}}...{{/name}}
 ~~~
@@ -140,6 +146,7 @@ When the value is a function the special argument $invertBlock is
   set in the arguments object to indicate whether the block is inverted 
   or not.
 
+### >
 ~~~clean
 {{>path}}
 ~~~
@@ -161,6 +168,7 @@ When the value is a function the special argument $invertBlock is
   and the argument ``render="no"`` indicates that the template should
   only be preloaded and not rendered out.
   
+### >
 ~~~clean
 {{! comment }}
 ~~~
