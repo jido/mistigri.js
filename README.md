@@ -29,6 +29,8 @@ Supported features
 ~~~
 
   Provides an argument with a value.
+  The value provided for the argument can be a number, a string within
+  quotes or a name in the model.
   
   The "default" argument is used when the value associated with name
   is null or undefined.
@@ -37,9 +39,15 @@ Supported features
   insert.
   
   For function values the arguments are passed as an object.
+  There is a convenience function that converts the arguments object into arguments to a function.
   
-  The value provided for the argument can be a number, a string within
-  quotes or a name in the model.
+  Example of use:
+
+```javascript
+haveameal: mistigri.useParams("food, purr", haveMeal)
+```
+
+  When ``haveameal`` is used in the template, the Javascript function ``haveMeal()`` is called with the two named arguments in order.
   
 ~~~clean
 {{&name}}
@@ -180,7 +188,9 @@ Configuration options
   __escapeFunction__ : _function(string) &#x2192; string_
   
   The escape function to use when the tag does not start with 
-  ``&``. The default is to escape HTML characters (requires DOM).
+  ``&``. The default is to escape ``<`` and ``&``. Uses DOM if ``document`` is defined.
+
+  Note, the default escape function is not suitable for use in HTML attributes since quotes are not escaped.
   
   __methodCall__ : _boolean_
   
@@ -194,8 +204,8 @@ Configuration options
   A function that reads a template and returns it wrapped in a
   promise.
   
-  The default is a function that does an Ajax request when provided
-  an URI (requires DOM).
+  The default is a function that fetches a template when provided
+  an URI (uses the fetch API).
   
   There is also a reader generator for testing purposes which
   returns a reader when fed an object containing templates. This is
@@ -203,9 +213,13 @@ Configuration options
 
 ~~~javascript
 mistigri.process(
-  "Mistigri {{>include}}", 
-  {}, 
-  {reader: mistigri.feed({include: "catface &#931;:{"})}
+  "Mistigri {{>include}}",
+  {},
+  {
+    reader: mistigri.feed({
+      include: "catface &#931;:{"
+    })
+  }
 );
 ~~~
 
