@@ -49,7 +49,11 @@ Supported features
 haveameal: mistigri.useParams("food, purr", haveMeal)
 ~~~
 
-  When ``haveameal`` is used in the template, the Javascript function ``haveMeal()`` is called with the two named arguments in order.
+  When ``haveameal`` is used in the template, the Javascript function ``haveMeal(food, purr)`` is called with the two named arguments in order:
+
+~~~clean
+{{haveameal purr="yes" food="gourmet selection"}}
+~~~
   
 ### >
 ~~~clean
